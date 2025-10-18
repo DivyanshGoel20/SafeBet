@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
+import { ethers } from 'ethers';
 import { useWallet } from '../contexts/WalletContext';
+import { useNotification } from '@blockscout/app-sdk';
 
 const ConnectWallet = () => {
   const {
@@ -10,8 +12,11 @@ const ConnectWallet = () => {
     isConnecting,
     error,
     connectWallet,
-    disconnectWallet
+    disconnectWallet,
+    signer
   } = useWallet();
+
+  const { openTxToast } = useNotification();
 
   const buttonRef = useRef(null);
   const walletInfoRef = useRef(null);
@@ -80,6 +85,29 @@ const ConnectWallet = () => {
     return num.toFixed(2);
   };
 
+  const sendTestTransaction = async () => {
+    if (!signer) {
+      return;
+    }
+
+    try {
+      // Send a small amount of ETH to yourself (0.001 ETH)
+      const tx = await signer.sendTransaction({
+        to: account,
+        value: ethers.parseEther('0.001'),
+        gasLimit: 21000
+      });
+
+      console.log('Transaction sent:', tx.hash);
+      
+      // Show the transaction toast notification
+      await openTxToast('8453', tx.hash); // Base chain ID is 8453
+      
+    } catch (error) {
+      console.error('Transaction failed:', error);
+    }
+  };
+
   return (
     <div className="connect-wallet-container">
       {!isConnected ? (
@@ -128,6 +156,20 @@ const ConnectWallet = () => {
           <div className="usdc-balance">
             <span className="label">USDC Balance:</span>
             <span className="balance">{formatUSDCBalance(usdcBalance)} USDC</span>
+          </div>
+          
+          <div className="test-transaction-section">
+            <button 
+              className="test-transaction-button"
+              onClick={sendTestTransaction}
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonLeave}
+            >
+              🧪 Test Transaction (0.001 ETH)
+            </button>
+            <p className="test-description">
+              Send a small test transaction to see toast notifications
+            </p>
           </div>
         </div>
       )}
@@ -278,6 +320,41 @@ const ConnectWallet = () => {
           font-weight: 700;
           color: #059669;
           font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .test-transaction-section {
+          margin-top: 20px;
+          padding: 16px;
+          background: #f8fafc;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          text-align: center;
+        }
+
+        .test-transaction-button {
+          background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+          color: white;
+          border: none;
+          padding: 10px 16px;
+          border-radius: 6px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+          margin-bottom: 8px;
+        }
+
+        .test-transaction-button:hover {
+          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+          transform: translateY(-1px);
+        }
+
+        .test-description {
+          font-size: 12px;
+          color: #64748b;
+          margin: 0;
+          line-height: 1.4;
         }
 
         @media (max-width: 480px) {

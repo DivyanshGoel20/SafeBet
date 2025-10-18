@@ -1,12 +1,14 @@
 import React from 'react';
 import { WalletProvider } from './contexts/WalletContext';
 import ConnectWallet from './components/ConnectWallet';
+import { NotificationProvider } from '@blockscout/app-sdk';
 import './App.css';
 
 function App() {
   return (
-    <WalletProvider>
-      <div className="App">
+    <NotificationProvider>
+      <WalletProvider>
+        <div className="App">
         <header className="app-header">
           <h1 className="app-title">Lossless Prediction Market</h1>
           <p className="app-subtitle">Bet on outcomes, earn yield, never lose your principal</p>
@@ -44,7 +46,8 @@ function App() {
         </main>
         
       </div>
-    </WalletProvider>
+      </WalletProvider>
+    </NotificationProvider>
   );
 }
 
