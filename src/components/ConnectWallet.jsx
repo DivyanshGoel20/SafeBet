@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ethers } from 'ethers';
 import { useWallet } from '../contexts/WalletContext';
-import { useNotification } from '@blockscout/app-sdk';
+import { useNotification, useTransactionPopup } from '@blockscout/app-sdk';
 
 const ConnectWallet = () => {
   const {
@@ -17,6 +17,7 @@ const ConnectWallet = () => {
   } = useWallet();
 
   const { openTxToast } = useNotification();
+  const { openPopup } = useTransactionPopup();
 
   const buttonRef = useRef(null);
   const walletInfoRef = useRef(null);
@@ -108,6 +109,25 @@ const ConnectWallet = () => {
     }
   };
 
+  const showTransactionHistory = () => {
+    if (!account) {
+      return;
+    }
+
+    // Show transaction history for the connected wallet address
+    openPopup({
+      chainId: '8453', // Base chain ID
+      address: account // Current wallet address
+    });
+  };
+
+  const showAllTransactions = () => {
+    // Show all transactions on Base network
+    openPopup({
+      chainId: '8453' // Base chain ID only
+    });
+  };
+
   return (
     <div className="connect-wallet-container">
       {!isConnected ? (
@@ -169,6 +189,30 @@ const ConnectWallet = () => {
             </button>
             <p className="test-description">
               Send a small test transaction to see toast notifications
+            </p>
+          </div>
+
+          <div className="transaction-history-section">
+            <div className="history-buttons">
+              <button 
+                className="history-button primary"
+                onClick={showTransactionHistory}
+                onMouseEnter={handleButtonHover}
+                onMouseLeave={handleButtonLeave}
+              >
+                📋 My Transactions
+              </button>
+              <button 
+                className="history-button secondary"
+                onClick={showAllTransactions}
+                onMouseEnter={handleButtonHover}
+                onMouseLeave={handleButtonLeave}
+              >
+                🌐 All Base Transactions
+              </button>
+            </div>
+            <p className="history-description">
+              View transaction history and explore the Base network
             </p>
           </div>
         </div>
@@ -355,6 +399,67 @@ const ConnectWallet = () => {
           color: #64748b;
           margin: 0;
           line-height: 1.4;
+        }
+
+        .transaction-history-section {
+          margin-top: 16px;
+          padding: 16px;
+          background: #f1f5f9;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+        }
+
+        .history-buttons {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 8px;
+          flex-wrap: wrap;
+        }
+
+        .history-button {
+          flex: 1;
+          min-width: 140px;
+          padding: 8px 12px;
+          border: none;
+          border-radius: 6px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+        }
+
+        .history-button.primary {
+          background: linear-gradient(135deg, #059669 0%, #047857 100%);
+          color: white;
+          box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+        }
+
+        .history-button.primary:hover {
+          box-shadow: 0 4px 10px rgba(5, 150, 105, 0.4);
+          transform: translateY(-1px);
+        }
+
+        .history-button.secondary {
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+          color: white;
+          box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+        }
+
+        .history-button.secondary:hover {
+          box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4);
+          transform: translateY(-1px);
+        }
+
+        .history-description {
+          font-size: 11px;
+          color: #64748b;
+          margin: 0;
+          line-height: 1.4;
+          text-align: center;
         }
 
         @media (max-width: 480px) {
