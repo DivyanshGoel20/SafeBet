@@ -137,14 +137,21 @@ const ConnectWallet = () => {
           max-width: 400px;
           margin: 0 auto;
           padding: 20px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .connect-section {
           text-align: center;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .connect-button {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          background: linear-gradient(135deg, #059669 0%, #047857 100%);
           color: white;
           border: none;
           padding: 12px 24px;
@@ -153,7 +160,7 @@ const ConnectWallet = () => {
           font-weight: 600;
           cursor: pointer;
           transition: all 0.3s ease;
-          box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+          box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
           min-width: 160px;
           height: 48px;
           display: flex;
@@ -163,7 +170,7 @@ const ConnectWallet = () => {
         }
 
         .connect-button:hover:not(:disabled) {
-          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+          box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
           transform: translateY(-2px);
         }
 

@@ -43,9 +43,6 @@ function App() {
           </div>
         </main>
         
-        <footer className="app-footer">
-          <p>Built on Base • Powered by Aave • Secured by Pyth</p>
-        </footer>
       </div>
     </WalletProvider>
   );

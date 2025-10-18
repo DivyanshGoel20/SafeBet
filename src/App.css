@@ -11,7 +11,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
   min-height: 100vh;
   color: #1e293b;
 }
@@ -141,15 +141,6 @@ body {
   font-size: 0.95rem;
 }
 
-/* Footer */
-.app-footer {
-  text-align: center;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.1);
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.9rem;
-  font-weight: 500;
-}
 
 /* Responsive design */
 @media (max-width: 768px) {
