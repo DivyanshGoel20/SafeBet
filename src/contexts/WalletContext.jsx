@@ -53,6 +53,7 @@ export const WalletProvider = ({ children }) => {
     }
   }, [account, provider]);
 
+
   const checkWalletConnection = async () => {
     if (window.ethereum) {
       try {

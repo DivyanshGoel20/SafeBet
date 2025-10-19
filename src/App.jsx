@@ -1,6 +1,8 @@
 import React from 'react';
 import { WalletProvider } from './contexts/WalletContext';
+import { AdminProvider } from './contexts/AdminContext';
 import ConnectWallet from './components/ConnectWallet';
+import AdminPanel from './components/AdminPanel';
 import { NotificationProvider, TransactionPopupProvider } from '@blockscout/app-sdk';
 import './App.css';
 
@@ -8,8 +10,9 @@ function App() {
   return (
     <NotificationProvider>
       <TransactionPopupProvider>
-        <WalletProvider>
-          <div className="App">
+        <AdminProvider>
+          <WalletProvider>
+            <div className="App">
         <header className="app-header">
           <h1 className="app-title">Lossless Prediction Market</h1>
           <p className="app-subtitle">Bet on outcomes, earn yield, never lose your principal</p>
@@ -22,6 +25,7 @@ function App() {
               Connect your MetaMask wallet to start participating in prediction markets on Base network.
             </p>
             <ConnectWallet />
+            <AdminPanel />
           </div>
           
           <div className="info-section">
@@ -47,7 +51,8 @@ function App() {
         </main>
         
       </div>
-        </WalletProvider>
+          </WalletProvider>
+        </AdminProvider>
       </TransactionPopupProvider>
     </NotificationProvider>
   );
