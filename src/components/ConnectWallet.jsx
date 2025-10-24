@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { ethers } from 'ethers';
 import { useWallet } from '../contexts/WalletContext';
 import { useNotification, useTransactionPopup } from '@blockscout/app-sdk';
+// import { BridgeButton, TransferButton } from '@avail-project/nexus-widgets';
 
 const ConnectWallet = () => {
   const {
@@ -215,6 +216,54 @@ const ConnectWallet = () => {
               View transaction history and explore the Base network
             </p>
           </div>
+
+        {/* <div className="nexus-widgets-section">
+          <h4 className="nexus-title">🌉 Avail Nexus Integration</h4>
+          <p className="nexus-description">
+            Bridge and transfer assets across chains using Avail Nexus
+          </p>
+          
+          <div className="nexus-buttons">
+            <div className="nexus-button-group">
+              <h5>Bridge Assets</h5>
+              <BridgeButton
+                prefill={{
+                  chainId: 8453, // Base chain ID
+                  token: 'USDC', // USDC token
+                  amount: '10' // 10 USDC
+                }}
+                onSuccess={(result) => {
+                  console.log('Bridge successful:', result);
+                  alert('Bridge transaction successful!');
+                }}
+                onError={(error) => {
+                  console.error('Bridge error:', error);
+                  alert('Bridge failed: ' + error.message);
+                }}
+              />
+            </div>
+
+            <div className="nexus-button-group">
+              <h5>Transfer Assets</h5>
+              <TransferButton
+                prefill={{
+                  chainId: 8453, // Base chain ID
+                  token: 'USDC', // USDC token
+                  amount: '5', // 5 USDC
+                  recipient: account // Your wallet address
+                }}
+                onSuccess={(result) => {
+                  console.log('Transfer successful:', result);
+                  alert('Transfer transaction successful!');
+                }}
+                onError={(error) => {
+                  console.error('Transfer error:', error);
+                  alert('Transfer failed: ' + error.message);
+                }}
+              />
+            </div>
+          </div>
+        </div> */}
         </div>
       )}
 
@@ -460,6 +509,73 @@ const ConnectWallet = () => {
           margin: 0;
           line-height: 1.4;
           text-align: center;
+        }
+
+        .nexus-widgets-section {
+          margin-top: 20px;
+          padding: 20px;
+          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+          border-radius: 12px;
+          border: 2px solid #6366f1;
+          box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2);
+        }
+
+        .nexus-title {
+          margin: 0 0 8px 0;
+          color: #6366f1;
+          font-size: 16px;
+          font-weight: 700;
+          text-align: center;
+        }
+
+        .nexus-description {
+          margin: 0 0 16px 0;
+          color: #94a3b8;
+          font-size: 12px;
+          text-align: center;
+          line-height: 1.4;
+        }
+
+        .nexus-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .nexus-button-group {
+          text-align: center;
+        }
+
+        .nexus-button-group h5 {
+          margin: 0 0 8px 0;
+          color: #e2e8f0;
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        .nexus-button-group button {
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+          min-width: 120px;
+        }
+
+        .nexus-button-group button:hover {
+          box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+          transform: translateY(-2px);
+        }
+
+        @media (max-width: 480px) {
+          .nexus-buttons {
+            gap: 12px;
+          }
         }
 
         @media (max-width: 480px) {

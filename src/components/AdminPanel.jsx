@@ -9,14 +9,14 @@ const AdminPanel = () => {
   const [showCreateMarket, setShowCreateMarket] = useState(false);
   const [marketData, setMarketData] = useState({
     title: '',
-    description: '',
     endDate: '',
-    category: 'general',
-    options: ['Yes', 'No']
+    tokenName: 'USDC'
   });
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState(null);
   const [createSuccess, setCreateSuccess] = useState(null);
+  const [markets, setMarkets] = useState([]);
+  const [showMarkets, setShowMarkets] = useState(false);
 
   // Verify admin status when wallet connects
   useEffect(() => {
@@ -39,12 +39,20 @@ const AdminPanel = () => {
       
       if (result.success) {
         setCreateSuccess(`Market created successfully! ID: ${result.marketId}`);
+        // Add the new market to the list
+        const newMarket = {
+          id: result.marketId,
+          title: marketData.title,
+          endDate: marketData.endDate,
+          tokenName: marketData.tokenName,
+          createdAt: new Date().toISOString(),
+          status: 'active'
+        };
+        setMarkets(prev => [newMarket, ...prev]);
         setMarketData({
           title: '',
-          description: '',
           endDate: '',
-          category: 'general',
-          options: ['Yes', 'No']
+          tokenName: 'USDC'
         });
         setShowCreateMarket(false);
       }
@@ -55,28 +63,6 @@ const AdminPanel = () => {
     }
   };
 
-  const addOption = () => {
-    setMarketData(prev => ({
-      ...prev,
-      options: [...prev.options, '']
-    }));
-  };
-
-  const removeOption = (index) => {
-    if (marketData.options.length > 2) {
-      setMarketData(prev => ({
-        ...prev,
-        options: prev.options.filter((_, i) => i !== index)
-      }));
-    }
-  };
-
-  const updateOption = (index, value) => {
-    setMarketData(prev => ({
-      ...prev,
-      options: prev.options.map((option, i) => i === index ? value : option)
-    }));
-  };
 
   // Debug information
   console.log('AdminPanel render:', { isAdmin, adminAddress, account });
@@ -103,12 +89,11 @@ const AdminPanel = () => {
           {showCreateMarket ? '❌ Cancel' : '➕ Create New Market'}
         </button>
         
-        <button className="admin-button secondary">
-          📊 View All Markets
-        </button>
-        
-        <button className="admin-button secondary">
-          ⚙️ Admin Settings
+        <button 
+          className="admin-button secondary"
+          onClick={() => setShowMarkets(!showMarkets)}
+        >
+          📊 {showMarkets ? 'Hide Markets' : 'View All Markets'} ({markets.length})
         </button>
       </div>
 
@@ -123,18 +108,7 @@ const AdminPanel = () => {
                 type="text"
                 value={marketData.title}
                 onChange={(e) => setMarketData(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="e.g., Will Bitcoin reach $100k by end of 2024?"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Description *</label>
-              <textarea
-                value={marketData.description}
-                onChange={(e) => setMarketData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Describe the market in detail..."
-                rows="3"
+                placeholder="e.g., Will ETH be ≥ $3,500 on Oct 30?"
                 required
               />
             </div>
@@ -150,49 +124,18 @@ const AdminPanel = () => {
             </div>
 
             <div className="form-group">
-              <label>Category</label>
-              <select
-                value={marketData.category}
-                onChange={(e) => setMarketData(prev => ({ ...prev, category: e.target.value }))}
-              >
-                <option value="general">General</option>
-                <option value="crypto">Cryptocurrency</option>
-                <option value="politics">Politics</option>
-                <option value="sports">Sports</option>
-                <option value="technology">Technology</option>
-                <option value="weather">Weather</option>
-              </select>
+              <label>Token Name *</label>
+              <input
+                type="text"
+                value={marketData.tokenName}
+                onChange={(e) => setMarketData(prev => ({ ...prev, tokenName: e.target.value }))}
+                placeholder="e.g., USDC, ETH, DAI"
+                required
+              />
             </div>
 
-            <div className="form-group">
-              <label>Market Options *</label>
-              {marketData.options.map((option, index) => (
-                <div key={index} className="option-input">
-                  <input
-                    type="text"
-                    value={option}
-                    onChange={(e) => updateOption(index, e.target.value)}
-                    placeholder={`Option ${index + 1}`}
-                    required
-                  />
-                  {marketData.options.length > 2 && (
-                    <button
-                      type="button"
-                      onClick={() => removeOption(index)}
-                      className="remove-option"
-                    >
-                      ❌
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addOption}
-                className="add-option"
-              >
-                ➕ Add Option
-              </button>
+            <div className="form-info">
+              <p><strong>Note:</strong> This will create a simple Yes/No prediction market. The smart contract will handle all other details like token address, yield generation, and market mechanics.</p>
             </div>
 
             {createError && (
@@ -224,6 +167,48 @@ const AdminPanel = () => {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {showMarkets && (
+        <div className="markets-section">
+          <h4>All Markets ({markets.length})</h4>
+          {markets.length === 0 ? (
+            <div className="no-markets">
+              <p>No markets created yet. Create your first market above!</p>
+            </div>
+          ) : (
+            <div className="markets-list">
+              {markets.map((market) => (
+                <div key={market.id} className="market-card">
+                  <div className="market-header">
+                    <h5>{market.title}</h5>
+                    <span className={`market-status ${market.status}`}>
+                      {market.status}
+                    </span>
+                  </div>
+                  <div className="market-details">
+                    <div className="market-detail">
+                      <span className="detail-label">Token:</span>
+                      <span className="detail-value">{market.tokenName}</span>
+                    </div>
+                    <div className="market-detail">
+                      <span className="detail-label">End Date:</span>
+                      <span className="detail-value">
+                        {new Date(market.endDate).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="market-detail">
+                      <span className="detail-label">Created:</span>
+                      <span className="detail-value">
+                        {new Date(market.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -407,6 +392,108 @@ const AdminPanel = () => {
           border-radius: 6px;
           font-size: 12px;
           margin-bottom: 12px;
+        }
+
+        .form-info {
+          background: #1e40af;
+          color: #dbeafe;
+          padding: 12px;
+          border-radius: 6px;
+          font-size: 12px;
+          margin-bottom: 16px;
+          border-left: 3px solid #3b82f6;
+        }
+
+        .form-info p {
+          margin: 0;
+          line-height: 1.4;
+        }
+
+        .markets-section {
+          background: #1e293b;
+          padding: 20px;
+          border-radius: 8px;
+          border: 1px solid #475569;
+          margin-top: 16px;
+        }
+
+        .markets-section h4 {
+          margin: 0 0 16px 0;
+          color: #f59e0b;
+          font-size: 16px;
+        }
+
+        .no-markets {
+          text-align: center;
+          padding: 20px;
+          color: #94a3b8;
+          font-style: italic;
+        }
+
+        .markets-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .market-card {
+          background: #334155;
+          padding: 16px;
+          border-radius: 8px;
+          border: 1px solid #475569;
+        }
+
+        .market-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 12px;
+        }
+
+        .market-header h5 {
+          margin: 0;
+          color: #f1f5f9;
+          font-size: 14px;
+          font-weight: 600;
+          flex: 1;
+          margin-right: 12px;
+        }
+
+        .market-status {
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+
+        .market-status.active {
+          background: #059669;
+          color: white;
+        }
+
+        .market-details {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .market-detail {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .detail-label {
+          color: #94a3b8;
+          font-size: 12px;
+          font-weight: 500;
+        }
+
+        .detail-value {
+          color: #e2e8f0;
+          font-size: 12px;
+          font-weight: 600;
         }
 
         .form-actions {

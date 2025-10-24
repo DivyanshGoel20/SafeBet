@@ -10,7 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aave/react": "^0.7.0",
+    "@avail-project/nexus-widgets": "^0.0.5",
     "@blockscout/app-sdk": "^0.1.2",
+    "esbuild": "^0.25.11",
     "ethers": "^6.8.1",
     "gsap": "^3.12.2",
     "react": "^19.2.0",
