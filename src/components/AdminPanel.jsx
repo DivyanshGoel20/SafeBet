@@ -1,22 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../contexts/AdminContext';
 import { useWallet } from '../contexts/WalletContext';
+import { useMarket } from '../contexts/MarketContext';
+import { ethers } from 'ethers';
 
 const AdminPanel = () => {
-  const { isAdmin, adminAddress, createMarket, checkAdminStatus } = useAdmin();
+  const { isAdmin, adminAddress, checkAdminStatus } = useAdmin();
   const { account, provider } = useWallet();
+  const { markets, loading, createMarket, loadMarkets, initializeMarketContext } = useMarket();
   
   const [showCreateMarket, setShowCreateMarket] = useState(false);
   const [marketData, setMarketData] = useState({
-    title: '',
-    endDate: '',
-    tokenName: 'USDC'
+    usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Default USDC on Base
+    aavePool: '',
+    pythContract: '',
+    pythPriceId: '',
+    targetPrice: '',
+    resolveDate: '',
+    question: ''
   });
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState(null);
   const [createSuccess, setCreateSuccess] = useState(null);
-  const [markets, setMarkets] = useState([]);
   const [showMarkets, setShowMarkets] = useState(false);
+  const [factoryAddress, setFactoryAddress] = useState('');
 
   // Verify admin status when wallet connects
   useEffect(() => {
@@ -25,6 +32,13 @@ const AdminPanel = () => {
       checkAdminStatus(account, provider);
     }
   }, [account, provider, checkAdminStatus]);
+
+  // Initialize market context when provider and factory address are available
+  useEffect(() => {
+    if (provider && account && factoryAddress) {
+      initializeMarketContext(provider, account, factoryAddress);
+    }
+  }, [provider, account, factoryAddress, initializeMarketContext]);
 
   const handleCreateMarket = async (e) => {
     e.preventDefault();
@@ -35,27 +49,36 @@ const AdminPanel = () => {
     setCreateSuccess(null);
 
     try {
-      const result = await createMarket(marketData);
+      // Convert target price to proper format (multiply by 1e8 for Pyth price format)
+      const targetPriceFormatted = ethers.parseUnits(marketData.targetPrice, 8);
       
-      if (result.success) {
-        setCreateSuccess(`Market created successfully! ID: ${result.marketId}`);
-        // Add the new market to the list
-        const newMarket = {
-          id: result.marketId,
-          title: marketData.title,
-          endDate: marketData.endDate,
-          tokenName: marketData.tokenName,
-          createdAt: new Date().toISOString(),
-          status: 'active'
-        };
-        setMarkets(prev => [newMarket, ...prev]);
-        setMarketData({
-          title: '',
-          endDate: '',
-          tokenName: 'USDC'
-        });
-        setShowCreateMarket(false);
-      }
+      // Convert resolve date to timestamp
+      const resolveTimestamp = Math.floor(new Date(marketData.resolveDate).getTime() / 1000);
+      
+      // Convert pyth price ID to bytes32
+      const pythPriceIdBytes = ethers.zeroPadValue(marketData.pythPriceId, 32);
+
+      const result = await createMarket({
+        usdcAddress: marketData.usdcAddress,
+        aavePool: marketData.aavePool,
+        pythContract: marketData.pythContract,
+        pythPriceId: pythPriceIdBytes,
+        targetPrice: targetPriceFormatted,
+        resolveDate: resolveTimestamp,
+        question: marketData.question
+      });
+      
+      setCreateSuccess(`Market created successfully! Transaction: ${result.hash}`);
+      setMarketData({
+        usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+        aavePool: '',
+        pythContract: '',
+        pythPriceId: '',
+        targetPrice: '',
+        resolveDate: '',
+        question: ''
+      });
+      setShowCreateMarket(false);
     } catch (error) {
       setCreateError(error.message);
     } finally {
@@ -103,39 +126,95 @@ const AdminPanel = () => {
           
           <form onSubmit={handleCreateMarket}>
             <div className="form-group">
-              <label>Market Title *</label>
+              <label>Factory Contract Address *</label>
               <input
                 type="text"
-                value={marketData.title}
-                onChange={(e) => setMarketData(prev => ({ ...prev, title: e.target.value }))}
+                value={factoryAddress}
+                onChange={(e) => setFactoryAddress(e.target.value)}
+                placeholder="0x..."
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Question *</label>
+              <input
+                type="text"
+                value={marketData.question}
+                onChange={(e) => setMarketData(prev => ({ ...prev, question: e.target.value }))}
                 placeholder="e.g., Will ETH be ≥ $3,500 on Oct 30?"
                 required
               />
             </div>
 
             <div className="form-group">
-              <label>End Date *</label>
+              <label>USDC Contract Address *</label>
               <input
-                type="datetime-local"
-                value={marketData.endDate}
-                onChange={(e) => setMarketData(prev => ({ ...prev, endDate: e.target.value }))}
+                type="text"
+                value={marketData.usdcAddress}
+                onChange={(e) => setMarketData(prev => ({ ...prev, usdcAddress: e.target.value }))}
+                placeholder="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
                 required
               />
             </div>
 
             <div className="form-group">
-              <label>Token Name *</label>
+              <label>Aave Pool Address *</label>
               <input
                 type="text"
-                value={marketData.tokenName}
-                onChange={(e) => setMarketData(prev => ({ ...prev, tokenName: e.target.value }))}
-                placeholder="e.g., USDC, ETH, DAI"
+                value={marketData.aavePool}
+                onChange={(e) => setMarketData(prev => ({ ...prev, aavePool: e.target.value }))}
+                placeholder="0x..."
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Pyth Contract Address *</label>
+              <input
+                type="text"
+                value={marketData.pythContract}
+                onChange={(e) => setMarketData(prev => ({ ...prev, pythContract: e.target.value }))}
+                placeholder="0x..."
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Pyth Price ID *</label>
+              <input
+                type="text"
+                value={marketData.pythPriceId}
+                onChange={(e) => setMarketData(prev => ({ ...prev, pythPriceId: e.target.value }))}
+                placeholder="0x..."
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Target Price *</label>
+              <input
+                type="number"
+                step="0.01"
+                value={marketData.targetPrice}
+                onChange={(e) => setMarketData(prev => ({ ...prev, targetPrice: e.target.value }))}
+                placeholder="3500.00"
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Resolve Date *</label>
+              <input
+                type="datetime-local"
+                value={marketData.resolveDate}
+                onChange={(e) => setMarketData(prev => ({ ...prev, resolveDate: e.target.value }))}
                 required
               />
             </div>
 
             <div className="form-info">
-              <p><strong>Note:</strong> This will create a simple Yes/No prediction market. The smart contract will handle all other details like token address, yield generation, and market mechanics.</p>
+              <p><strong>Note:</strong> This will create a lossless prediction market using Aave for yield generation. All parameters must be valid contract addresses on Base network.</p>
             </div>
 
             {createError && (
@@ -173,37 +252,53 @@ const AdminPanel = () => {
       {showMarkets && (
         <div className="markets-section">
           <h4>All Markets ({markets.length})</h4>
-          {markets.length === 0 ? (
+          {loading ? (
+            <div className="loading-markets">
+              <p>Loading markets...</p>
+            </div>
+          ) : markets.length === 0 ? (
             <div className="no-markets">
               <p>No markets created yet. Create your first market above!</p>
             </div>
           ) : (
             <div className="markets-list">
               {markets.map((market) => (
-                <div key={market.id} className="market-card">
+                <div key={market.address} className="market-card">
                   <div className="market-header">
-                    <h5>{market.title}</h5>
-                    <span className={`market-status ${market.status}`}>
-                      {market.status}
+                    <h5>{market.question}</h5>
+                    <span className={`market-status ${market.marketState === 0 ? 'active' : market.marketState === 1 ? 'resolved' : 'cancelled'}`}>
+                      {market.marketState === 0 ? 'Active' : market.marketState === 1 ? 'Resolved' : 'Cancelled'}
                     </span>
                   </div>
                   <div className="market-details">
                     <div className="market-detail">
-                      <span className="detail-label">Token:</span>
-                      <span className="detail-value">{market.tokenName}</span>
+                      <span className="detail-label">Address:</span>
+                      <span className="detail-value">{market.address.slice(0, 6)}...{market.address.slice(-4)}</span>
                     </div>
                     <div className="market-detail">
-                      <span className="detail-label">End Date:</span>
+                      <span className="detail-label">Target Price:</span>
+                      <span className="detail-value">${(Number(market.targetPrice) / 1e8).toFixed(2)}</span>
+                    </div>
+                    <div className="market-detail">
+                      <span className="detail-label">Resolve Date:</span>
                       <span className="detail-value">
-                        {new Date(market.endDate).toLocaleString()}
+                        {new Date(Number(market.resolveDate) * 1000).toLocaleString()}
                       </span>
                     </div>
                     <div className="market-detail">
-                      <span className="detail-label">Created:</span>
-                      <span className="detail-value">
-                        {new Date(market.createdAt).toLocaleDateString()}
-                      </span>
+                      <span className="detail-label">Total Yes:</span>
+                      <span className="detail-value">{ethers.formatUnits(market.totalYes, 6)} USDC</span>
                     </div>
+                    <div className="market-detail">
+                      <span className="detail-label">Total No:</span>
+                      <span className="detail-value">{ethers.formatUnits(market.totalNo, 6)} USDC</span>
+                    </div>
+                    {market.marketState === 1 && (
+                      <div className="market-detail">
+                        <span className="detail-label">Winning Side:</span>
+                        <span className="detail-value">{market.winningSide === 1 ? 'Yes' : 'No'}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -423,7 +518,7 @@ const AdminPanel = () => {
           font-size: 16px;
         }
 
-        .no-markets {
+        .no-markets, .loading-markets {
           text-align: center;
           padding: 20px;
           color: #94a3b8;
