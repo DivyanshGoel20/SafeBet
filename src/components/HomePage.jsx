@@ -1,0 +1,475 @@
+import React from 'react';
+import { useWallet } from '../contexts/WalletContext';
+import ConnectWallet from './ConnectWallet';
+
+const HomePage = () => {
+  const { isConnected } = useWallet();
+
+  return (
+    <div className="homepage">
+      {/* Hero Section */}
+      <section className="hero-section">
+        <div className="hero-content">
+          <div className="hero-text">
+            <h1 className="hero-title">
+              🎯 Lossless Prediction Markets
+            </h1>
+            <p className="hero-subtitle">
+              Bet on outcomes, earn yield, never lose your principal. 
+              The future of risk-free prediction markets on Base.
+            </p>
+            <div className="hero-stats">
+              <div className="stat-card">
+                <div className="stat-icon">🛡️</div>
+                <div className="stat-content">
+                  <div className="stat-number">0%</div>
+                  <div className="stat-label">Risk of Loss</div>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">💰</div>
+                <div className="stat-content">
+                  <div className="stat-number">100%</div>
+                  <div className="stat-label">Principal Protected</div>
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">⚡</div>
+                <div className="stat-content">
+                  <div className="stat-number">∞</div>
+                  <div className="stat-label">Yield Potential</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="hero-actions">
+            {isConnected ? (
+              <div className="connected-wallet">
+                <div className="wallet-info">
+                  <div className="wallet-address">
+                    {account?.slice(0, 6)}...{account?.slice(-4)}
+                  </div>
+                  <div className="wallet-status">Connected</div>
+                </div>
+              </div>
+            ) : (
+              <div className="connect-wallet-prompt">
+                <div className="prompt-content">
+                  <div className="prompt-icon">🔗</div>
+                  <h3>Connect Your Wallet</h3>
+                  <p>Connect your wallet to start betting on prediction markets</p>
+                  <ConnectWallet />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="features-section">
+        <div className="features-container">
+          <h2 className="section-title">Why Choose Lossless Markets?</h2>
+          <div className="features-grid">
+            <div className="feature-card">
+              <div className="feature-icon">🛡️</div>
+              <h3>Principal Protection</h3>
+              <p>Your initial investment is always returned, regardless of the outcome. Only the yield is at stake.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">💰</div>
+              <h3>Yield Generation</h3>
+              <p>Your funds are automatically deposited into Aave to generate yield while you predict.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">⚡</div>
+              <h3>Instant Settlement</h3>
+              <p>Markets resolve automatically using Pyth price feeds for fair and transparent outcomes.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">🌐</div>
+              <h3>Base Network</h3>
+              <p>Built on Base for fast, cheap transactions with Ethereum security.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="how-it-works-section">
+        <div className="how-it-works-container">
+          <h2 className="section-title">How It Works</h2>
+          <div className="steps-container">
+            <div className="step">
+              <div className="step-number">1</div>
+              <div className="step-content">
+                <h3>Deposit & Earn</h3>
+                <p>Deposit USDC into the prediction market. Your funds are automatically supplied to Aave to generate yield while you predict.</p>
+              </div>
+            </div>
+            <div className="step">
+              <div className="step-number">2</div>
+              <div className="step-content">
+                <h3>Make Predictions</h3>
+                <p>Bet "Yes" or "No" on real-world events with zero risk to your principal. Only the generated yield is at stake.</p>
+              </div>
+            </div>
+            <div className="step">
+              <div className="step-number">3</div>
+              <div className="step-content">
+                <h3>Win or Break Even</h3>
+                <p>Winners get the yield generated by all participants, while everyone gets their principal back regardless of the outcome.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      {isConnected && (
+        <section className="cta-section">
+          <div className="cta-container">
+            <h2>Ready to Start Predicting?</h2>
+            <p>Explore active markets and start earning yield on your predictions.</p>
+            <button className="cta-button" onClick={() => window.location.hash = '#markets'}>
+              View Markets
+            </button>
+          </div>
+        </section>
+      )}
+
+      <style jsx>{`
+        .homepage {
+          min-height: 100vh;
+          background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        }
+
+        .hero-section {
+          padding: 80px 24px;
+          text-align: center;
+          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+          border-bottom: 1px solid #475569;
+        }
+
+        .hero-content {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+
+        .hero-text {
+          margin-bottom: 40px;
+        }
+
+        .hero-title {
+          font-size: 48px;
+          font-weight: 800;
+          color: #f1f5f9;
+          margin: 0 0 24px 0;
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .hero-subtitle {
+          font-size: 20px;
+          color: #94a3b8;
+          margin: 0 0 40px 0;
+          max-width: 600px;
+          margin-left: auto;
+          margin-right: auto;
+          line-height: 1.6;
+        }
+
+        .hero-stats {
+          display: flex;
+          justify-content: center;
+          gap: 32px;
+          flex-wrap: wrap;
+        }
+
+        .stat-card {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          background: rgba(245, 158, 11, 0.1);
+          padding: 20px 24px;
+          border-radius: 12px;
+          border: 1px solid rgba(245, 158, 11, 0.2);
+          min-width: 200px;
+        }
+
+        .stat-icon {
+          font-size: 32px;
+        }
+
+        .stat-content {
+          text-align: left;
+        }
+
+        .stat-number {
+          font-size: 24px;
+          font-weight: 700;
+          color: #f59e0b;
+          margin: 0;
+        }
+
+        .stat-label {
+          font-size: 14px;
+          color: #e2e8f0;
+          margin: 0;
+        }
+
+        .hero-actions {
+          margin-top: 40px;
+        }
+
+        .connected-wallet {
+          display: flex;
+          justify-content: center;
+        }
+
+        .wallet-info {
+          background: rgba(34, 197, 94, 0.1);
+          padding: 20px 32px;
+          border-radius: 12px;
+          border: 1px solid rgba(34, 197, 94, 0.2);
+          text-align: center;
+        }
+
+        .wallet-address {
+          color: #22c55e;
+          font-family: 'Monaco', 'Menlo', monospace;
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 8px;
+        }
+
+        .wallet-status {
+          color: #16a34a;
+          font-size: 14px;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .connect-wallet-prompt {
+          display: flex;
+          justify-content: center;
+        }
+
+        .prompt-content {
+          background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+          padding: 40px;
+          border-radius: 16px;
+          border: 1px solid #3b82f6;
+          max-width: 500px;
+          text-align: center;
+        }
+
+        .prompt-icon {
+          font-size: 48px;
+          margin-bottom: 20px;
+        }
+
+        .prompt-content h3 {
+          color: #dbeafe;
+          margin: 0 0 12px 0;
+          font-size: 24px;
+        }
+
+        .prompt-content p {
+          color: #93c5fd;
+          margin: 0 0 24px 0;
+        }
+
+        .features-section {
+          padding: 80px 24px;
+          background: #0f172a;
+        }
+
+        .features-container {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+
+        .section-title {
+          font-size: 36px;
+          font-weight: 700;
+          color: #f1f5f9;
+          text-align: center;
+          margin: 0 0 60px 0;
+        }
+
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 32px;
+        }
+
+        .feature-card {
+          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+          padding: 32px;
+          border-radius: 16px;
+          border: 1px solid #475569;
+          text-align: center;
+          transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+          border-color: #f59e0b;
+        }
+
+        .feature-icon {
+          font-size: 48px;
+          margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+          font-size: 20px;
+          font-weight: 600;
+          color: #f1f5f9;
+          margin: 0 0 16px 0;
+        }
+
+        .feature-card p {
+          color: #94a3b8;
+          line-height: 1.6;
+          margin: 0;
+        }
+
+        .how-it-works-section {
+          padding: 80px 24px;
+          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
+
+        .how-it-works-container {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+
+        .steps-container {
+          display: flex;
+          gap: 40px;
+          align-items: flex-start;
+          flex-wrap: wrap;
+        }
+
+        .step {
+          flex: 1;
+          min-width: 300px;
+          display: flex;
+          gap: 24px;
+          align-items: flex-start;
+        }
+
+        .step-number {
+          width: 60px;
+          height: 60px;
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          color: white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          font-weight: 700;
+          flex-shrink: 0;
+        }
+
+        .step-content h3 {
+          font-size: 24px;
+          font-weight: 600;
+          color: #f1f5f9;
+          margin: 0 0 12px 0;
+        }
+
+        .step-content p {
+          color: #94a3b8;
+          line-height: 1.6;
+          margin: 0;
+        }
+
+        .cta-section {
+          padding: 80px 24px;
+          background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+          text-align: center;
+        }
+
+        .cta-container {
+          max-width: 600px;
+          margin: 0 auto;
+        }
+
+        .cta-container h2 {
+          font-size: 32px;
+          font-weight: 700;
+          color: #f1f5f9;
+          margin: 0 0 16px 0;
+        }
+
+        .cta-container p {
+          font-size: 18px;
+          color: #94a3b8;
+          margin: 0 0 32px 0;
+        }
+
+        .cta-button {
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          color: white;
+          border: none;
+          padding: 16px 32px;
+          border-radius: 12px;
+          font-size: 18px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+        }
+
+        .cta-button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 12px 35px rgba(245, 158, 11, 0.4);
+        }
+
+        @media (max-width: 768px) {
+          .hero-title {
+            font-size: 36px;
+          }
+
+          .hero-subtitle {
+            font-size: 18px;
+          }
+
+          .hero-stats {
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .stat-card {
+            min-width: auto;
+            width: 100%;
+            max-width: 300px;
+          }
+
+          .steps-container {
+            flex-direction: column;
+            gap: 32px;
+          }
+
+          .step {
+            min-width: auto;
+          }
+
+          .section-title {
+            font-size: 28px;
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default HomePage;

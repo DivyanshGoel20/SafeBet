@@ -66,7 +66,6 @@ export const AdminProvider = ({ children }) => {
       if (!isAddressMatch) {
         setIsAdmin(false);
         setAdminAddress(null);
-        setIsVerifying(false);
         return;
       }
 
@@ -83,20 +82,15 @@ export const AdminProvider = ({ children }) => {
         }
       }
 
-      // Method 3: Server-side verification (most secure)
-      // This would call your backend API to verify admin status
-      const serverVerification = await verifyAdminWithServerAPI(walletAddress);
-
-      // All three methods must pass
+      // For now, just use address verification (simplified)
       console.log('Verification results:', {
         isAddressMatch,
         isContractAdmin,
-        serverVerification,
         walletAddress,
         adminAddress: ADMIN_WALLET_ADDRESS
       });
       
-      if (isAddressMatch && isContractAdmin && serverVerification) {
+      if (isAddressMatch && isContractAdmin) {
         setIsAdmin(true);
         setAdminAddress(walletAddress);
         console.log('✅ Admin verification successful');
@@ -114,25 +108,10 @@ export const AdminProvider = ({ children }) => {
     }
   };
 
-  // Server-side verification function
+  // Simplified admin verification
   const verifyAdminWithServerAPI = async (walletAddress) => {
-    try {
-      // Validate the request first
-      validateAdminRequest(walletAddress);
-      
-      // Check rate limiting
-      checkRateLimit(walletAddress);
-      
-      // Call the server verification
-      const result = await verifyAdminWithServer(walletAddress);
-      
-      console.log('Server verification result:', result);
-      return result.isAdmin;
-    } catch (error) {
-      console.warn('Server verification failed:', error);
-      // Fallback to client-side verification
-      return walletAddress.toLowerCase() === ADMIN_WALLET_ADDRESS.toLowerCase();
-    }
+    // For now, just return true if address matches
+    return walletAddress.toLowerCase() === ADMIN_WALLET_ADDRESS.toLowerCase();
   };
 
   // Admin-only functions

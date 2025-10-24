@@ -204,13 +204,15 @@ const AdminPanel = () => {
             </div>
 
             <div className="form-group">
-              <label>Resolve Date *</label>
+              <label>Resolve Date (Unix Timestamp) *</label>
               <input
-                type="datetime-local"
+                type="number"
                 value={marketData.resolveDate}
                 onChange={(e) => setMarketData(prev => ({ ...prev, resolveDate: e.target.value }))}
+                placeholder="1761829200"
                 required
               />
+              <small className="form-help">Enter Unix timestamp (e.g., 1761829200 for a specific date)</small>
             </div>
 
             <div className="form-info">
@@ -437,6 +439,14 @@ const AdminPanel = () => {
           outline: none;
           border-color: #f59e0b;
           box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+        }
+
+        .form-help {
+          display: block;
+          color: #94a3b8;
+          font-size: 12px;
+          margin-top: 4px;
+          font-style: italic;
         }
 
         .option-input {
