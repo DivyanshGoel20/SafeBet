@@ -134,6 +134,17 @@ export const MarketProvider = ({ children }) => {
         throw new Error('Transaction was cancelled by user');
       }
       
+      // Handle insufficient balance errors
+      if (err.reason?.includes('transfer amount exceeds balance') || 
+          err.message?.includes('transfer amount exceeds balance')) {
+        throw new Error('Insufficient USDC balance. Please check your wallet balance.');
+      }
+      
+      // Handle other common revert errors
+      if (err.code === 'CALL_EXCEPTION' && err.reason) {
+        throw new Error(`Transaction failed: ${err.reason}`);
+      }
+      
       throw err;
     }
   };
@@ -177,6 +188,17 @@ export const MarketProvider = ({ children }) => {
         throw new Error('Transaction was cancelled by user');
       }
       
+      // Handle insufficient balance errors
+      if (err.reason?.includes('transfer amount exceeds balance') || 
+          err.message?.includes('transfer amount exceeds balance')) {
+        throw new Error('Insufficient USDC balance. Please check your wallet balance.');
+      }
+      
+      // Handle other common revert errors
+      if (err.code === 'CALL_EXCEPTION' && err.reason) {
+        throw new Error(`Transaction failed: ${err.reason}`);
+      }
+      
       throw err;
     }
   };
@@ -215,6 +237,17 @@ export const MarketProvider = ({ children }) => {
         throw new Error('Transaction was cancelled by user');
       }
       
+      // Handle insufficient balance errors
+      if (err.reason?.includes('transfer amount exceeds balance') || 
+          err.message?.includes('transfer amount exceeds balance')) {
+        throw new Error('Insufficient USDC balance. Please check your wallet balance.');
+      }
+      
+      // Handle other common revert errors
+      if (err.code === 'CALL_EXCEPTION' && err.reason) {
+        throw new Error(`Transaction failed: ${err.reason}`);
+      }
+      
       throw err;
     }
   };
@@ -245,6 +278,17 @@ export const MarketProvider = ({ children }) => {
       // Handle user rejection gracefully
       if (err.code === 'ACTION_REJECTED' || err.message?.includes('user rejected')) {
         throw new Error('Transaction was cancelled by user');
+      }
+      
+      // Handle insufficient balance errors
+      if (err.reason?.includes('transfer amount exceeds balance') || 
+          err.message?.includes('transfer amount exceeds balance')) {
+        throw new Error('Insufficient USDC balance. Please check your wallet balance.');
+      }
+      
+      // Handle other common revert errors
+      if (err.code === 'CALL_EXCEPTION' && err.reason) {
+        throw new Error(`Transaction failed: ${err.reason}`);
       }
       
       throw err;
@@ -325,6 +369,17 @@ export const MarketProvider = ({ children }) => {
       // Handle user rejection gracefully
       if (err.code === 'ACTION_REJECTED' || err.message?.includes('user rejected')) {
         throw new Error('USDC approval was cancelled by user');
+      }
+      
+      // Handle insufficient balance errors
+      if (err.reason?.includes('transfer amount exceeds balance') || 
+          err.message?.includes('transfer amount exceeds balance')) {
+        throw new Error('Insufficient USDC balance. Please check your wallet balance.');
+      }
+      
+      // Handle other common revert errors
+      if (err.code === 'CALL_EXCEPTION' && err.reason) {
+        throw new Error(`USDC approval failed: ${err.reason}`);
       }
       
       throw err;
