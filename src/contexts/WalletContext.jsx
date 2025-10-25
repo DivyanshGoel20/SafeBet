@@ -67,9 +67,27 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
-  const connectWallet = async () => {
-    if (!window.ethereum) {
-      setError('MetaMask is not installed. Please install MetaMask to continue.');
+  const connectWallet = async (walletType = 'metamask') => {
+    // Check for different wallet providers
+    let provider = null;
+    
+    if (walletType === 'metamask' && window.ethereum) {
+      provider = window.ethereum;
+    } else if (walletType === 'rabby' && window.rabby) {
+      provider = window.rabby;
+    } else if (walletType === 'coinbase' && window.coinbaseWalletExtension) {
+      provider = window.coinbaseWalletExtension;
+    } else if (walletType === 'walletconnect') {
+      // For WalletConnect, we'd need to implement the WalletConnect provider
+      setError('WalletConnect integration coming soon!');
+      return;
+    } else {
+      setError(`${walletType.charAt(0).toUpperCase() + walletType.slice(1)} is not installed. Please install the wallet to continue.`);
+      return;
+    }
+
+    if (!provider) {
+      setError('No wallet provider found. Please install a supported wallet.');
       return;
     }
 
@@ -78,36 +96,36 @@ export const WalletProvider = ({ children }) => {
 
     try {
       // Request account access
-      const accounts = await window.ethereum.request({
+      const accounts = await provider.request({
         method: 'eth_requestAccounts'
       });
 
-      // Check if we're on Base network
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      const baseChainId = '0x2105'; // Base mainnet
+      // Check if we're on Base Sepolia Testnet
+      const chainId = await provider.request({ method: 'eth_chainId' });
+      const baseSepoliaChainId = '0x14a34'; // Base Sepolia Testnet
 
-      if (chainId !== baseChainId) {
+      if (chainId !== baseSepoliaChainId) {
         try {
-          await window.ethereum.request({
+          await provider.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: baseChainId }],
+            params: [{ chainId: baseSepoliaChainId }],
           });
         } catch (switchError) {
           // If the network doesn't exist, add it
           if (switchError.code === 4902) {
-            await window.ethereum.request({
+            await provider.request({
               method: 'wallet_addEthereumChain',
               params: [
                 {
-                  chainId: baseChainId,
-                  chainName: 'Base',
+                  chainId: baseSepoliaChainId,
+                  chainName: 'Base Sepolia',
                   nativeCurrency: {
                     name: 'Ethereum',
                     symbol: 'ETH',
                     decimals: 18,
                   },
-                  rpcUrls: ['https://mainnet.base.org'],
-                  blockExplorerUrls: ['https://basescan.org'],
+                  rpcUrls: ['https://sepolia.base.org'],
+                  blockExplorerUrls: ['https://sepolia.basescan.org'],
                 },
               ],
             });
@@ -118,15 +136,17 @@ export const WalletProvider = ({ children }) => {
       }
 
       // Create provider and signer
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      const signer = await ethersProvider.getSigner();
       const address = await signer.getAddress();
 
       setAccount(address);
-      setProvider(provider);
+      setProvider(ethersProvider);
       setSigner(signer);
       setIsConnected(true);
       setIsConnecting(false);
+      
+      console.log(`Connected to ${walletType} on Base Sepolia Testnet`);
 
     } catch (err) {
       console.error('Error connecting wallet:', err);

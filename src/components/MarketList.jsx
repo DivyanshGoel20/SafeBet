@@ -159,7 +159,7 @@ const MarketList = ({ onMarketClick }) => {
         </div>
       )}
 
-      <style jsx>{`
+      <style jsx="true">{`
         .market-list {
           padding: 20px;
           max-width: 1200px;

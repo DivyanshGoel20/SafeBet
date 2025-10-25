@@ -1,9 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ethers } from 'ethers';
 import { useWallet } from '../contexts/WalletContext';
 import { useNotification, useTransactionPopup } from '@blockscout/app-sdk';
-// import { BridgeButton, TransferButton } from '@avail-project/nexus-widgets';
 
 const ConnectWallet = () => {
   const {
@@ -20,40 +19,71 @@ const ConnectWallet = () => {
   const { openTxToast } = useNotification();
   const { openPopup } = useTransactionPopup();
 
+  const [showWalletOptions, setShowWalletOptions] = useState(false);
   const buttonRef = useRef(null);
   const walletInfoRef = useRef(null);
   const errorRef = useRef(null);
+  const optionsRef = useRef(null);
 
   // GSAP animations
   useEffect(() => {
     if (isConnected && walletInfoRef.current) {
-      // Animate wallet info reveal
       gsap.fromTo(walletInfoRef.current, 
-        { 
-          opacity: 0, 
-          y: 20, 
-          scale: 0.95 
-        },
-        { 
-          opacity: 1, 
-          y: 0, 
-          scale: 1, 
-          duration: 0.6, 
-          ease: "back.out(1.7)" 
-        }
+        { opacity: 0, y: 20, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: "back.out(1.7)" }
       );
     }
   }, [isConnected]);
 
   useEffect(() => {
     if (error && errorRef.current) {
-      // Animate error message
       gsap.fromTo(errorRef.current,
         { opacity: 0, y: -10 },
         { opacity: 1, y: 0, duration: 0.3 }
       );
     }
   }, [error]);
+
+  useEffect(() => {
+    if (showWalletOptions && optionsRef.current) {
+      gsap.fromTo(optionsRef.current,
+        { opacity: 0, y: -10, scale: 0.95 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "back.out(1.7)" }
+      );
+    }
+  }, [showWalletOptions]);
+
+  const walletOptions = [
+    {
+      name: 'MetaMask',
+      icon: '🦊',
+      description: 'Connect using MetaMask',
+      action: () => connectWallet('metamask')
+    },
+    {
+      name: 'Rabby Wallet',
+      icon: '🐰',
+      description: 'Connect using Rabby Wallet',
+      action: () => connectWallet('rabby')
+    },
+    {
+      name: 'Coinbase Wallet',
+      icon: '🔵',
+      description: 'Connect using Coinbase Wallet',
+      action: () => connectWallet('coinbase')
+    },
+    {
+      name: 'WalletConnect',
+      icon: '🔗',
+      description: 'Connect using WalletConnect',
+      action: () => connectWallet('walletconnect')
+    }
+  ];
+
+  const handleWalletConnect = async (walletType) => {
+    setShowWalletOptions(false);
+    await connectWallet(walletType);
+  };
 
   const handleButtonHover = () => {
     if (buttonRef.current) {
@@ -88,12 +118,9 @@ const ConnectWallet = () => {
   };
 
   const sendTestTransaction = async () => {
-    if (!signer) {
-      return;
-    }
+    if (!signer) return;
 
     try {
-      // Send a small amount of ETH to yourself (0.001 ETH)
       const tx = await signer.sendTransaction({
         to: account,
         value: ethers.parseEther('0.001'),
@@ -101,31 +128,23 @@ const ConnectWallet = () => {
       });
 
       console.log('Transaction sent:', tx.hash);
-      
-      // Show the transaction toast notification
-      await openTxToast('8453', tx.hash); // Base chain ID is 8453
-      
+      await openTxToast('84532', tx.hash); // Base Sepolia chain ID
     } catch (error) {
       console.error('Transaction failed:', error);
     }
   };
 
   const showTransactionHistory = () => {
-    if (!account) {
-      return;
-    }
-
-    // Show transaction history for the connected wallet address
+    if (!account) return;
     openPopup({
-      chainId: '8453', // Base chain ID
-      address: account // Current wallet address
+      chainId: '84532', // Base Sepolia chain ID
+      address: account
     });
   };
 
   const showAllTransactions = () => {
-    // Show all transactions on Base network
     openPopup({
-      chainId: '8453' // Base chain ID only
+      chainId: '84532' // Base Sepolia chain ID
     });
   };
 
@@ -136,7 +155,7 @@ const ConnectWallet = () => {
           <button
             ref={buttonRef}
             className="connect-button"
-            onClick={connectWallet}
+            onClick={() => setShowWalletOptions(!showWalletOptions)}
             disabled={isConnecting}
             onMouseEnter={handleButtonHover}
             onMouseLeave={handleButtonLeave}
@@ -150,6 +169,36 @@ const ConnectWallet = () => {
               'Connect Wallet'
             )}
           </button>
+          
+          {showWalletOptions && (
+            <div ref={optionsRef} className="wallet-options">
+              <div className="wallet-options-header">
+                <h3>Choose Your Wallet</h3>
+                <button 
+                  className="close-btn"
+                  onClick={() => setShowWalletOptions(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="wallet-list">
+                {walletOptions.map((wallet, index) => (
+                  <button
+                    key={index}
+                    className="wallet-option"
+                    onClick={() => handleWalletConnect(wallet.name.toLowerCase())}
+                  >
+                    <div className="wallet-icon">{wallet.icon}</div>
+                    <div className="wallet-details">
+                      <div className="wallet-name">{wallet.name}</div>
+                      <div className="wallet-description">{wallet.description}</div>
+                    </div>
+                    <div className="wallet-arrow">→</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           
           {error && (
             <div ref={errorRef} className="error-message">
@@ -209,65 +258,17 @@ const ConnectWallet = () => {
                 onMouseEnter={handleButtonHover}
                 onMouseLeave={handleButtonLeave}
               >
-                🌐 All Base Transactions
+                🌐 All Base Sepolia Transactions
               </button>
             </div>
             <p className="history-description">
-              View transaction history and explore the Base network
+              View transaction history and explore the Base Sepolia network
             </p>
           </div>
-
-        {/* <div className="nexus-widgets-section">
-          <h4 className="nexus-title">🌉 Avail Nexus Integration</h4>
-          <p className="nexus-description">
-            Bridge and transfer assets across chains using Avail Nexus
-          </p>
-          
-          <div className="nexus-buttons">
-            <div className="nexus-button-group">
-              <h5>Bridge Assets</h5>
-              <BridgeButton
-                prefill={{
-                  chainId: 8453, // Base chain ID
-                  token: 'USDC', // USDC token
-                  amount: '10' // 10 USDC
-                }}
-                onSuccess={(result) => {
-                  console.log('Bridge successful:', result);
-                  alert('Bridge transaction successful!');
-                }}
-                onError={(error) => {
-                  console.error('Bridge error:', error);
-                  alert('Bridge failed: ' + error.message);
-                }}
-              />
-            </div>
-
-            <div className="nexus-button-group">
-              <h5>Transfer Assets</h5>
-              <TransferButton
-                prefill={{
-                  chainId: 8453, // Base chain ID
-                  token: 'USDC', // USDC token
-                  amount: '5', // 5 USDC
-                  recipient: account // Your wallet address
-                }}
-                onSuccess={(result) => {
-                  console.log('Transfer successful:', result);
-                  alert('Transfer transaction successful!');
-                }}
-                onError={(error) => {
-                  console.error('Transfer error:', error);
-                  alert('Transfer failed: ' + error.message);
-                }}
-              />
-            </div>
-          </div>
-        </div> */}
         </div>
       )}
 
-      <style jsx>{`
+      <style jsx="true">{`
         .connect-wallet-container {
           max-width: 400px;
           margin: 0 auto;
@@ -275,6 +276,7 @@ const ConnectWallet = () => {
           display: flex;
           flex-direction: column;
           align-items: center;
+          position: relative;
         }
 
         .connect-section {
@@ -313,6 +315,97 @@ const ConnectWallet = () => {
           opacity: 0.7;
           cursor: not-allowed;
           transform: none;
+        }
+
+        .wallet-options {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+          border: 1px solid #e2e8f0;
+          z-index: 1000;
+          margin-top: 8px;
+        }
+
+        .wallet-options-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px 20px;
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        .wallet-options-header h3 {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: #1e293b;
+        }
+
+        .close-btn {
+          background: none;
+          border: none;
+          font-size: 18px;
+          cursor: pointer;
+          color: #64748b;
+          padding: 4px;
+          border-radius: 4px;
+        }
+
+        .close-btn:hover {
+          background: #f1f5f9;
+        }
+
+        .wallet-list {
+          padding: 8px;
+        }
+
+        .wallet-option {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          border: none;
+          background: none;
+          cursor: pointer;
+          border-radius: 8px;
+          transition: all 0.2s ease;
+          text-align: left;
+        }
+
+        .wallet-option:hover {
+          background: #f8fafc;
+        }
+
+        .wallet-icon {
+          font-size: 24px;
+          width: 32px;
+          text-align: center;
+        }
+
+        .wallet-details {
+          flex: 1;
+        }
+
+        .wallet-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: #1e293b;
+          margin-bottom: 2px;
+        }
+
+        .wallet-description {
+          font-size: 12px;
+          color: #64748b;
+        }
+
+        .wallet-arrow {
+          font-size: 16px;
+          color: #64748b;
         }
 
         .loading-spinner {
@@ -511,73 +604,6 @@ const ConnectWallet = () => {
           text-align: center;
         }
 
-        .nexus-widgets-section {
-          margin-top: 20px;
-          padding: 20px;
-          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-          border-radius: 12px;
-          border: 2px solid #6366f1;
-          box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2);
-        }
-
-        .nexus-title {
-          margin: 0 0 8px 0;
-          color: #6366f1;
-          font-size: 16px;
-          font-weight: 700;
-          text-align: center;
-        }
-
-        .nexus-description {
-          margin: 0 0 16px 0;
-          color: #94a3b8;
-          font-size: 12px;
-          text-align: center;
-          line-height: 1.4;
-        }
-
-        .nexus-buttons {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .nexus-button-group {
-          text-align: center;
-        }
-
-        .nexus-button-group h5 {
-          margin: 0 0 8px 0;
-          color: #e2e8f0;
-          font-size: 13px;
-          font-weight: 600;
-        }
-
-        .nexus-button-group button {
-          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-          color: white;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-          min-width: 120px;
-        }
-
-        .nexus-button-group button:hover {
-          box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
-          transform: translateY(-2px);
-        }
-
-        @media (max-width: 480px) {
-          .nexus-buttons {
-            gap: 12px;
-          }
-        }
-
         @media (max-width: 480px) {
           .wallet-header {
             flex-direction: column;
@@ -589,6 +615,15 @@ const ConnectWallet = () => {
             flex-direction: column;
             gap: 8px;
             align-items: flex-start;
+          }
+
+          .wallet-options {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
           }
         }
       `}</style>

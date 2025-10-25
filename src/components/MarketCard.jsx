@@ -242,7 +242,7 @@ const MarketCard = ({ market, onClick }) => {
         </div>
       )}
 
-      <style jsx>{`
+      <style jsx="true">{`
         .market-card {
           background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
           border-radius: 12px;

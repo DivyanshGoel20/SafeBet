@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { verifyAdminWithServer, validateAdminRequest, checkRateLimit } from '../utils/adminAPI';
 
 const AdminContext = createContext();
 
@@ -108,28 +107,7 @@ export const AdminProvider = ({ children }) => {
     }
   };
 
-  // Simplified admin verification
-  const verifyAdminWithServerAPI = async (walletAddress) => {
-    // For now, just return true if address matches
-    return walletAddress.toLowerCase() === ADMIN_WALLET_ADDRESS.toLowerCase();
-  };
 
-  // Admin-only functions
-  const createMarket = async (marketData) => {
-    if (!isAdmin) {
-      throw new Error('Only admin can create markets');
-    }
-    
-    // This would call your smart contract or backend API
-    console.log('Creating market:', marketData);
-    
-    // Simulate market creation
-    return {
-      success: true,
-      marketId: Date.now().toString(),
-      transactionHash: '0x' + Math.random().toString(16).substr(2, 64)
-    };
-  };
 
 
   const value = {
@@ -137,8 +115,7 @@ export const AdminProvider = ({ children }) => {
     adminAddress,
     verificationError,
     verifyAdminStatus,
-    checkAdminStatus,
-    createMarket
+    checkAdminStatus
   };
 
   return (

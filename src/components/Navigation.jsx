@@ -9,15 +9,10 @@ const Navigation = ({ currentPage, onNavigate }) => {
   // Trigger admin verification when wallet connects
   useEffect(() => {
     if (isConnected && account && provider) {
-      console.log('Triggering admin verification for:', account);
       checkAdminStatus(account, provider);
     }
   }, [isConnected, account, provider, checkAdminStatus]);
 
-  // Debug admin status
-  useEffect(() => {
-    console.log('Admin status:', { isAdmin, account, isConnected });
-  }, [isAdmin, account, isConnected]);
 
   return (
     <nav className="navigation">
@@ -68,7 +63,7 @@ const Navigation = ({ currentPage, onNavigate }) => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style jsx="true">{`
         .navigation {
           background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
           border-bottom: 1px solid #334155;

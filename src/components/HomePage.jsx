@@ -3,7 +3,7 @@ import { useWallet } from '../contexts/WalletContext';
 import ConnectWallet from './ConnectWallet';
 
 const HomePage = () => {
-  const { isConnected } = useWallet();
+  const { isConnected, account } = useWallet();
 
   return (
     <div className="homepage">
@@ -138,7 +138,7 @@ const HomePage = () => {
         </section>
       )}
 
-      <style jsx>{`
+      <style jsx="true">{`
         .homepage {
           min-height: 100vh;
           background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);

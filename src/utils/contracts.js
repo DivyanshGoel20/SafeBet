@@ -46,7 +46,7 @@ export const MARKET_ABI = [
 
 // Contract addresses (to be updated with deployed addresses)
 export const CONTRACT_ADDRESSES = {
-  MARKET_FACTORY: '', // Will be provided by user
+  MARKET_FACTORY: '0xfae0F8cDD9c6ac8A3D6083DA5d20374367bBF6D7', // Will be provided by user
   USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
   AAVE_POOL: '', // Aave Pool address on Base
   PYTH: '' // Pyth contract address on Base

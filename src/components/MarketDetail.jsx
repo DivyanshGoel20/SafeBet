@@ -357,7 +357,7 @@ const MarketDetail = ({ marketAddress, onBack }) => {
         <div className="success-message">{success}</div>
       )}
 
-      <style jsx>{`
+      <style jsx="true">{`
         .market-detail {
           max-width: 800px;
           margin: 0 auto;

@@ -163,7 +163,7 @@ const MarketsPage = ({ onMarketClick }) => {
         </div>
       )}
 
-      <style jsx>{`
+      <style jsx="true">{`
         .markets-page {
           min-height: 100vh;
           background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
