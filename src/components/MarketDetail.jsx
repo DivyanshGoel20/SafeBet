@@ -3,6 +3,7 @@ import { useMarket } from '../contexts/MarketContext';
 import { useWallet } from '../contexts/WalletContext';
 import { ethers } from 'ethers';
 import { MARKET_STATES, MARKET_SIDES, extractPriceFromQuestion } from '../utils/contracts';
+import TransactionHistory from './TransactionHistory';
 
 const MarketDetail = ({ marketAddress, onBack }) => {
   const { getMarket, placeBet, resolveMarket, claimWinnings, getUserMarketStake, hasUserClaimedFromMarket, getMarketTimeLeft } = useMarket();
@@ -19,6 +20,7 @@ const MarketDetail = ({ marketAddress, onBack }) => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [priceUpdate, setPriceUpdate] = useState('');
+  const [showTransactionHistory, setShowTransactionHistory] = useState(false);
 
   useEffect(() => {
     if (marketAddress) {
@@ -211,9 +213,17 @@ const MarketDetail = ({ marketAddress, onBack }) => {
       
       <div className="market-header">
         <h1>{market.question}</h1>
-        <div className="market-status" data-state={market.marketState}>
-          {market.marketState === MARKET_STATES.ACTIVE ? 'Active' : 
-           market.marketState === MARKET_STATES.RESOLVED ? 'Resolved' : 'Cancelled'}
+        <div className="market-header-actions">
+          <button 
+            className="transaction-history-button"
+            onClick={() => setShowTransactionHistory(true)}
+          >
+            📊 Transaction History
+          </button>
+          <div className="market-status" data-state={market.marketState}>
+            {market.marketState === MARKET_STATES.ACTIVE ? 'Active' : 
+             market.marketState === MARKET_STATES.RESOLVED ? 'Resolved' : 'Cancelled'}
+          </div>
         </div>
       </div>
 
@@ -410,6 +420,33 @@ const MarketDetail = ({ marketAddress, onBack }) => {
           margin-bottom: 32px;
           padding-bottom: 20px;
           border-bottom: 2px solid #475569;
+        }
+
+        .market-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .transaction-history-button {
+          background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+          color: white;
+          border: none;
+          padding: 12px 20px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 14px;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .transaction-history-button:hover {
+          background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
         .market-header h1 {
@@ -735,6 +772,12 @@ const MarketDetail = ({ marketAddress, onBack }) => {
           }
         }
       `}</style>
+
+      <TransactionHistory 
+        marketAddress={marketAddress}
+        isOpen={showTransactionHistory}
+        onClose={() => setShowTransactionHistory(false)}
+      />
     </div>
   );
 };

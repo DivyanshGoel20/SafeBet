@@ -14,6 +14,7 @@ import {
   getMarketContract,
   CONTRACT_ADDRESSES
 } from '../utils/contracts';
+import { useNotification } from '@blockscout/app-sdk';
 
 const MarketContext = createContext();
 
@@ -32,6 +33,7 @@ export const MarketProvider = ({ children }) => {
   const [factoryAddress, setFactoryAddress] = useState('0xDd844365a2D55982B9f1B03d78Fb317EdAf87200');
   const [provider, setProvider] = useState(null);
   const [account, setAccount] = useState(null);
+  const { openTxToast } = useNotification();
 
   // Initialize market context with provider and account
   const initializeMarketContext = (providerInstance, accountAddress, factoryAddr) => {
@@ -117,12 +119,21 @@ export const MarketProvider = ({ children }) => {
 
       await tx.wait();
       
+      // Show BlockScout transaction toast
+      await openTxToast("1500", tx.hash); // Arbitrum Sepolia chain ID
+      
       // Reload markets after creation
       await loadMarkets();
       
       return tx;
     } catch (err) {
       console.error('Error creating market:', err);
+      
+      // Handle user rejection gracefully
+      if (err.code === 'ACTION_REJECTED' || err.message?.includes('user rejected')) {
+        throw new Error('Transaction was cancelled by user');
+      }
+      
       throw err;
     }
   };
@@ -151,12 +162,21 @@ export const MarketProvider = ({ children }) => {
 
       await tx.wait();
       
+      // Show BlockScout transaction toast
+      await openTxToast("1500", tx.hash); // Arbitrum Sepolia chain ID
+      
       // Reload markets to update totals
       await loadMarkets();
       
       return tx;
     } catch (err) {
       console.error('Error placing bet:', err);
+      
+      // Handle user rejection gracefully
+      if (err.code === 'ACTION_REJECTED' || err.message?.includes('user rejected')) {
+        throw new Error('Transaction was cancelled by user');
+      }
+      
       throw err;
     }
   };
@@ -180,12 +200,21 @@ export const MarketProvider = ({ children }) => {
 
       await tx.wait();
       
+      // Show BlockScout transaction toast
+      await openTxToast("1500", tx.hash); // Arbitrum Sepolia chain ID
+      
       // Reload markets to update state
       await loadMarkets();
       
       return tx;
     } catch (err) {
       console.error('Error resolving market:', err);
+      
+      // Handle user rejection gracefully
+      if (err.code === 'ACTION_REJECTED' || err.message?.includes('user rejected')) {
+        throw new Error('Transaction was cancelled by user');
+      }
+      
       throw err;
     }
   };
@@ -203,12 +232,21 @@ export const MarketProvider = ({ children }) => {
       const tx = await market.connect(signer).claim();
       await tx.wait();
       
+      // Show BlockScout transaction toast
+      await openTxToast("1500", tx.hash); // Arbitrum Sepolia chain ID
+      
       // Reload markets to update state
       await loadMarkets();
       
       return tx;
     } catch (err) {
       console.error('Error claiming winnings:', err);
+      
+      // Handle user rejection gracefully
+      if (err.code === 'ACTION_REJECTED' || err.message?.includes('user rejected')) {
+        throw new Error('Transaction was cancelled by user');
+      }
+      
       throw err;
     }
   };
@@ -283,6 +321,12 @@ export const MarketProvider = ({ children }) => {
       return false; // No approval needed
     } catch (err) {
       console.error('Error handling allowance:', err);
+      
+      // Handle user rejection gracefully
+      if (err.code === 'ACTION_REJECTED' || err.message?.includes('user rejected')) {
+        throw new Error('USDC approval was cancelled by user');
+      }
+      
       throw err;
     }
   };

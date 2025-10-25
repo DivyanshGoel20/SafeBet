@@ -271,6 +271,7 @@ const MarketCard = ({ market, onClick }) => {
           margin-bottom: 16px;
         }
 
+
         .market-header h3 {
           margin: 0;
           color: #f1f5f9;
@@ -500,6 +501,7 @@ const MarketCard = ({ market, onClick }) => {
           }
         }
       `}</style>
+
     </div>
   );
 };
