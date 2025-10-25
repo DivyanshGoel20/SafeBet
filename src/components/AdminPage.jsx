@@ -3,6 +3,7 @@ import { useAdmin } from '../contexts/AdminContext';
 import { useWallet } from '../contexts/WalletContext';
 import { useMarket } from '../contexts/MarketContext';
 import { ethers } from 'ethers';
+import { extractPriceFromQuestion } from '../utils/contracts';
 
 const AdminPage = () => {
   const { isAdmin, adminAddress, checkAdminStatus } = useAdmin();
@@ -11,7 +12,7 @@ const AdminPage = () => {
   
   const [showCreateMarket, setShowCreateMarket] = useState(false);
   const [marketData, setMarketData] = useState({
-    usdcAddress: '0x75faf114eafb1BDbe2F0316DF893FD58CE46AA4d',
+    usdcAddress: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d',
     aavePool: '',
     pythContract: '',
     pythPriceId: '',
@@ -64,7 +65,7 @@ const AdminPage = () => {
       
       setCreateSuccess(`Market created successfully! Transaction: ${result.hash}`);
       setMarketData({
-        usdcAddress: '0x75faf114eafb1BDbe2F0316DF893FD58CE46AA4d',
+        usdcAddress: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d',
         aavePool: '',
         pythContract: '',
         pythPriceId: '',
@@ -180,7 +181,7 @@ const AdminPage = () => {
                     type="text"
                     value={marketData.usdcAddress}
                     onChange={(e) => setMarketData(prev => ({ ...prev, usdcAddress: e.target.value }))}
-                    placeholder="0x75faf114eafb1BDbe2F0316DF893FD58CE46AA4d"
+                    placeholder="0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d"
                     required
                   />
                 </div>
@@ -310,7 +311,7 @@ const AdminPage = () => {
                     </div>
                     <div className="detail-item">
                       <span className="detail-label">Target Price:</span>
-                      <span className="detail-value">${(Number(market.targetPrice) / 1e8).toFixed(2)}</span>
+                      <span className="detail-value">${extractPriceFromQuestion(market.question)}</span>
                     </div>
                     <div className="detail-item">
                       <span className="detail-label">Resolve Date:</span>

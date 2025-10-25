@@ -197,3 +197,30 @@ export const approveUSDC = async (provider, usdcAddress, spender, amount) => {
   const tx = await usdc.connect(signer).approve(spender, amount);
   return tx;
 };
+
+// Helper function to format target price for display
+export const formatTargetPrice = (targetPrice) => {
+  if (!targetPrice) return '0.00';
+  const price = Number(targetPrice) / 1e8;
+  return price.toFixed(2);
+};
+
+// Helper function to extract target price from question text
+export const extractPriceFromQuestion = (question) => {
+  if (!question) return '0.00';
+  
+  // Look for pattern like "Will ETH be >= $4,500 on Oct 30"
+  const priceMatch = question.match(/\$([0-9,]+(?:\.[0-9]+)?)/);
+  if (priceMatch) {
+    // Remove commas and return the price
+    return priceMatch[1].replace(/,/g, '');
+  }
+  
+  // Fallback: try to find any number with $ sign
+  const fallbackMatch = question.match(/\$(\d+(?:\.\d+)?)/);
+  if (fallbackMatch) {
+    return fallbackMatch[1];
+  }
+  
+  return '0.00';
+};

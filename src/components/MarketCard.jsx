@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMarket } from '../contexts/MarketContext';
 import { useWallet } from '../contexts/WalletContext';
 import { ethers } from 'ethers';
-import { MARKET_STATES, MARKET_SIDES } from '../utils/contracts';
+import { MARKET_STATES, MARKET_SIDES, extractPriceFromQuestion } from '../utils/contracts';
 
 const MarketCard = ({ market, onClick }) => {
   const { placeBet, getUserMarketStake, hasUserClaimedFromMarket, getMarketTimeLeft } = useMarket();
@@ -152,7 +152,7 @@ const MarketCard = ({ market, onClick }) => {
       <div className="market-info">
         <div className="info-row">
           <span className="info-label">Target Price:</span>
-          <span className="info-value">${(Number(market.targetPrice) / 1e8).toFixed(2)}</span>
+          <span className="info-value">${extractPriceFromQuestion(market.question)}</span>
         </div>
         <div className="info-row">
           <span className="info-label">Resolve Date:</span>

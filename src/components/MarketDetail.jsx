@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMarket } from '../contexts/MarketContext';
 import { useWallet } from '../contexts/WalletContext';
 import { ethers } from 'ethers';
-import { MARKET_STATES, MARKET_SIDES } from '../utils/contracts';
+import { MARKET_STATES, MARKET_SIDES, extractPriceFromQuestion } from '../utils/contracts';
 
 const MarketDetail = ({ marketAddress, onBack }) => {
   const { getMarket, placeBet, resolveMarket, claimWinnings, getUserMarketStake, hasUserClaimedFromMarket, getMarketTimeLeft } = useMarket();
@@ -18,6 +18,7 @@ const MarketDetail = ({ marketAddress, onBack }) => {
   const [isClaiming, setIsClaiming] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [priceUpdate, setPriceUpdate] = useState('');
 
   useEffect(() => {
     if (marketAddress) {
@@ -106,37 +107,6 @@ const MarketDetail = ({ marketAddress, onBack }) => {
     }
   };
 
-  const handleResolveMarket = async () => {
-    if (!isConnected || !account) {
-      setError('Please connect your wallet first');
-      return;
-    }
-
-    if (market.marketState !== MARKET_STATES.ACTIVE) {
-      setError('This market is not active');
-      return;
-    }
-
-    if (Date.now() / 1000 < Number(market.resolveDate)) {
-      setError('Market cannot be resolved before resolve date');
-      return;
-    }
-
-    setIsResolving(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      // Note: In a real implementation, you would need to provide the Pyth price update data
-      // For now, we'll show an error that this needs to be implemented
-      setError('Market resolution requires Pyth price update data. This needs to be implemented with actual price feeds.');
-    } catch (err) {
-      console.error('Error resolving market:', err);
-      setError(err.message);
-    } finally {
-      setIsResolving(false);
-    }
-  };
 
   const handleClaimWinnings = async () => {
     if (!isConnected || !account) {
@@ -167,6 +137,40 @@ const MarketDetail = ({ marketAddress, onBack }) => {
       setError(err.message);
     } finally {
       setIsClaiming(false);
+    }
+  };
+
+  const handleResolveMarket = async () => {
+    if (!isConnected || !account) {
+      setError('Please connect your wallet first');
+      return;
+    }
+
+    if (market.marketState !== MARKET_STATES.ACTIVE) {
+      setError('Market is not active');
+      return;
+    }
+
+    if (timeLeft > 0) {
+      setError('Market is still active. Wait for betting to end.');
+      return;
+    }
+
+    setIsResolving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      // For now, we'll use an empty price update array
+      // In a real implementation, you'd need to provide actual Pyth price update data
+      const priceUpdateData = priceUpdate ? [priceUpdate] : [];
+      const tx = await resolveMarket(marketAddress, priceUpdateData);
+      setSuccess(`Market resolved successfully! Transaction: ${tx.hash}`);
+      await loadMarket();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsResolving(false);
     }
   };
 
@@ -218,7 +222,7 @@ const MarketDetail = ({ marketAddress, onBack }) => {
           <h3>Market Details</h3>
           <div className="info-item">
             <span className="label">Target Price:</span>
-            <span className="value">${(Number(market.targetPrice) / 1e8).toFixed(2)}</span>
+            <span className="value">${extractPriceFromQuestion(market.question)}</span>
           </div>
           <div className="info-item">
             <span className="label">Resolve Date:</span>
@@ -314,16 +318,30 @@ const MarketDetail = ({ marketAddress, onBack }) => {
         </div>
       )}
 
-      {market.marketState === MARKET_STATES.ACTIVE && timeLeft <= 0 && isConnected && (
+
+      {market.marketState === MARKET_STATES.ACTIVE && isConnected && (
         <div className="resolution-section">
           <h3>Resolve Market</h3>
-          <p>Betting has ended. You can now resolve this market.</p>
+          {timeLeft > 0 ? (
+            <p>Betting is still active. You can resolve this market after betting ends.</p>
+          ) : (
+            <p>Betting has ended. You can now resolve this market.</p>
+          )}
+          <div className="resolve-input">
+            <input
+              type="text"
+              placeholder="Price update data (optional)"
+              value={priceUpdate}
+              onChange={(e) => setPriceUpdate(e.target.value)}
+              disabled={isResolving || timeLeft > 0}
+            />
+          </div>
           <button
-            className="resolve-button"
+            className={`resolve-button ${timeLeft > 0 ? 'disabled' : ''}`}
             onClick={handleResolveMarket}
-            disabled={isResolving}
+            disabled={isResolving || timeLeft > 0}
           >
-            {isResolving ? 'Resolving...' : 'Resolve Market'}
+            {isResolving ? 'Resolving...' : timeLeft > 0 ? 'Resolve Market (Wait for betting to end)' : 'Resolve Market'}
           </button>
         </div>
       )}
@@ -515,7 +533,7 @@ const MarketDetail = ({ marketAddress, onBack }) => {
           font-weight: 700;
         }
 
-        .betting-section, .resolution-section, .claim-section, .claimed-section {
+        .betting-section, .resolution-section, .claim-section, .claimed-section, .admin-resolve-section {
           background: #1e293b;
           padding: 24px;
           border-radius: 12px;
@@ -523,7 +541,7 @@ const MarketDetail = ({ marketAddress, onBack }) => {
           margin-bottom: 24px;
         }
 
-        .betting-section h3, .resolution-section h3, .claim-section h3, .claimed-section h3 {
+        .betting-section h3, .resolution-section h3, .claim-section h3, .claimed-section h3, .admin-resolve-section h3 {
           color: #f1f5f9;
           margin: 0 0 16px 0;
           font-size: 18px;
@@ -559,6 +577,28 @@ const MarketDetail = ({ marketAddress, onBack }) => {
           color: #e2e8f0;
           font-size: 14px;
           font-weight: 600;
+        }
+
+        .resolve-input {
+          display: flex;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+
+        .resolve-input input {
+          flex: 1;
+          padding: 12px 16px;
+          border: 1px solid #475569;
+          border-radius: 8px;
+          background: #334155;
+          color: #f1f5f9;
+          font-size: 16px;
+        }
+
+        .resolve-input input:focus {
+          outline: none;
+          border-color: #f59e0b;
+          box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
         }
 
         .bet-buttons {
@@ -610,6 +650,17 @@ const MarketDetail = ({ marketAddress, onBack }) => {
         .resolve-button:hover:not(:disabled) {
           background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
           transform: translateY(-2px);
+        }
+
+        .resolve-button.disabled {
+          background: #64748b;
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .resolve-button.disabled:hover {
+          background: #64748b;
+          transform: none;
         }
 
         .claim-button {
