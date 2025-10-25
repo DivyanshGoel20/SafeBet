@@ -29,6 +29,11 @@ function App() {
     setSelectedMarket(null);
   };
 
+  const navigateToMarkets = () => {
+    setCurrentPage('markets');
+    setSelectedMarket(null);
+  };
+
   return (
     <NotificationProvider>
       <TransactionPopupProvider>
@@ -42,7 +47,7 @@ function App() {
                 {currentPage === 'markets' && <MarketsPage onMarketClick={navigateToMarket} />}
                 {currentPage === 'admin' && <AdminPage />}
                 {currentPage === 'market' && (
-                  <MarketDetail marketAddress={selectedMarket} onBack={navigateToHome} />
+                  <MarketDetail marketAddress={selectedMarket} onBack={navigateToMarkets} />
                 )}
               </div>
             </MarketProvider>

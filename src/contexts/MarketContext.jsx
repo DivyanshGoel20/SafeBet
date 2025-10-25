@@ -6,10 +6,13 @@ import {
   getUserStake, 
   hasUserClaimed,
   getTimeLeftForBetting,
+  getUSDCAllowance,
+  approveUSDC,
   MARKET_STATES,
   MARKET_SIDES,
   getMarketFactoryContract,
-  getMarketContract
+  getMarketContract,
+  CONTRACT_ADDRESSES
 } from '../utils/contracts';
 
 const MarketContext = createContext();
@@ -26,21 +29,24 @@ export const MarketProvider = ({ children }) => {
   const [markets, setMarkets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [factoryAddress, setFactoryAddress] = useState('');
+  const [factoryAddress, setFactoryAddress] = useState('0xDd844365a2D55982B9f1B03d78Fb317EdAf87200');
   const [provider, setProvider] = useState(null);
   const [account, setAccount] = useState(null);
 
   // Initialize market context with provider and account
   const initializeMarketContext = (providerInstance, accountAddress, factoryAddr) => {
+    console.log('Initializing MarketContext:', { providerInstance: !!providerInstance, accountAddress, factoryAddr });
     setProvider(providerInstance);
     setAccount(accountAddress);
-    setFactoryAddress(factoryAddr);
+    if (factoryAddr) {
+      setFactoryAddress(factoryAddr);
+    }
   };
 
   // Load all markets from factory
   const loadMarkets = async () => {
     if (!provider || !factoryAddress) {
-      console.warn('Provider or factory address not set');
+      console.warn('Provider or factory address not set', { provider: !!provider, factoryAddress });
       return;
     }
 
@@ -127,10 +133,13 @@ export const MarketProvider = ({ children }) => {
       throw new Error('Provider or account not set');
     }
 
-    const market = getMarketContract(provider, marketAddress);
-    const signer = await provider.getSigner();
-
     try {
+      // Check and handle allowance if needed
+      await checkAndHandleAllowance(marketAddress, amount);
+
+      const market = getMarketContract(provider, marketAddress);
+      const signer = await provider.getSigner();
+
       let tx;
       if (side === MARKET_SIDES.YES) {
         tx = await market.connect(signer).placeBetYes(amount);
@@ -246,16 +255,45 @@ export const MarketProvider = ({ children }) => {
     }
   };
 
-  // Auto-refresh markets every 30 seconds
+  // Check and handle USDC allowance for a market
+  const checkAndHandleAllowance = async (marketAddress, requiredAmount) => {
+    if (!provider || !account) {
+      throw new Error('Provider or account not set');
+    }
+
+    try {
+      const marketDetails = await getMarketDetails(provider, marketAddress);
+      const usdcAddress = marketDetails.usdc;
+      
+      const currentAllowance = await getUSDCAllowance(provider, usdcAddress, account, marketAddress);
+      
+      if (BigInt(currentAllowance) < BigInt(requiredAmount)) {
+        console.log('Insufficient allowance, approving USDC...');
+        // Approve a larger amount to avoid repeated approvals
+        const approveAmount = BigInt(requiredAmount) * BigInt(10) > BigInt(1000 * 1e6) 
+          ? BigInt(requiredAmount) * BigInt(10) 
+          : BigInt(1000 * 1e6);
+        
+        const approveTx = await approveUSDC(provider, usdcAddress, marketAddress, approveAmount.toString());
+        await approveTx.wait();
+        console.log('USDC approved successfully for amount:', approveAmount.toString());
+        return true;
+      }
+      
+      return false; // No approval needed
+    } catch (err) {
+      console.error('Error handling allowance:', err);
+      throw err;
+    }
+  };
+
+  // Load markets when provider and factory address are available
   useEffect(() => {
     if (provider && factoryAddress) {
+      console.log('Initial load: Loading markets with provider and factory address');
       loadMarkets();
-      
-      const interval = setInterval(() => {
-        loadMarkets();
-      }, 30000);
-
-      return () => clearInterval(interval);
+    } else {
+      console.log('Initial load: Skipping loadMarkets - missing provider or factory address', { provider: !!provider, factoryAddress });
     }
   }, [provider, factoryAddress]);
 
@@ -274,7 +312,8 @@ export const MarketProvider = ({ children }) => {
     claimWinnings,
     getUserMarketStake,
     hasUserClaimedFromMarket,
-    getMarketTimeLeft
+    getMarketTimeLeft,
+    checkAndHandleAllowance
   };
 
   return (

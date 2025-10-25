@@ -4,14 +4,17 @@ import { useWallet } from '../contexts/WalletContext';
 import MarketCard from './MarketCard';
 
 const MarketList = ({ onMarketClick }) => {
-  const { markets, loading, error, loadMarkets } = useMarket();
-  const { isConnected } = useWallet();
+  const { markets, loading, error, loadMarkets, initializeMarketContext } = useMarket();
+  const { isConnected, account, provider } = useWallet();
   const [filter, setFilter] = useState('all'); // all, active, resolved, cancelled
   const [sortBy, setSortBy] = useState('newest'); // newest, oldest, mostStaked
 
   useEffect(() => {
-    loadMarkets();
-  }, [loadMarkets]);
+    if (provider && account) {
+      // Use default factory address from MarketContext
+      initializeMarketContext(provider, account);
+    }
+  }, [provider, account, initializeMarketContext]);
 
   const filteredMarkets = markets.filter(market => {
     switch (filter) {

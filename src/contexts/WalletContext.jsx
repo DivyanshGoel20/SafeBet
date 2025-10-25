@@ -3,8 +3,8 @@ import { ethers } from 'ethers';
 
 const WalletContext = createContext();
 
-// USDC contract address on Base network
-const USDC_CONTRACT_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
+// USDC contract address on Arbitrum Sepolia
+const USDC_CONTRACT_ADDRESS = '0x75faf114eafb1BDbe2F0316DF893FD58CE46AA4d';
 const USDC_ABI = [
   'function balanceOf(address owner) view returns (uint256)',
   'function decimals() view returns (uint8)',
@@ -100,15 +100,15 @@ export const WalletProvider = ({ children }) => {
         method: 'eth_requestAccounts'
       });
 
-      // Check if we're on Base Sepolia Testnet
+      // Check if we're on Arbitrum Sepolia Testnet
       const chainId = await provider.request({ method: 'eth_chainId' });
-      const baseSepoliaChainId = '0x14a34'; // Base Sepolia Testnet
+      const arbitrumSepoliaChainId = '0x66eee'; // Arbitrum Sepolia Testnet
 
-      if (chainId !== baseSepoliaChainId) {
+      if (chainId !== arbitrumSepoliaChainId) {
         try {
           await provider.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: baseSepoliaChainId }],
+            params: [{ chainId: arbitrumSepoliaChainId }],
           });
         } catch (switchError) {
           // If the network doesn't exist, add it
@@ -117,15 +117,15 @@ export const WalletProvider = ({ children }) => {
               method: 'wallet_addEthereumChain',
               params: [
                 {
-                  chainId: baseSepoliaChainId,
-                  chainName: 'Base Sepolia',
+                  chainId: arbitrumSepoliaChainId,
+                  chainName: 'Arbitrum Sepolia',
                   nativeCurrency: {
                     name: 'Ethereum',
                     symbol: 'ETH',
                     decimals: 18,
                   },
-                  rpcUrls: ['https://sepolia.base.org'],
-                  blockExplorerUrls: ['https://sepolia.basescan.org'],
+                  rpcUrls: ['https://sepolia-rollup.arbitrum.io/rpc'],
+                  blockExplorerUrls: ['https://sepolia.arbiscan.io'],
                 },
               ],
             });
@@ -146,7 +146,7 @@ export const WalletProvider = ({ children }) => {
       setIsConnected(true);
       setIsConnecting(false);
       
-      console.log(`Connected to ${walletType} on Base Sepolia Testnet`);
+      console.log(`Connected to ${walletType} on Arbitrum Sepolia Testnet`);
 
     } catch (err) {
       console.error('Error connecting wallet:', err);

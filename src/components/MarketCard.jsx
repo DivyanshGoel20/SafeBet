@@ -189,7 +189,7 @@ const MarketCard = ({ market, onClick }) => {
       )}
 
       {market.marketState === MARKET_STATES.ACTIVE && timeLeft > 0 && isConnected && (
-        <div className="betting-section">
+        <div className="betting-section" onClick={(e) => e.stopPropagation()}>
           <div className="bet-input">
             <input
               type="number"
@@ -198,6 +198,7 @@ const MarketCard = ({ market, onClick }) => {
               value={betAmount}
               onChange={(e) => setBetAmount(e.target.value)}
               disabled={isPlacingBet}
+              onClick={(e) => e.stopPropagation()}
             />
             <span className="currency">USDC</span>
           </div>
@@ -205,14 +206,20 @@ const MarketCard = ({ market, onClick }) => {
           <div className="bet-buttons">
             <button
               className="bet-button yes"
-              onClick={() => handlePlaceBet(MARKET_SIDES.YES)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePlaceBet(MARKET_SIDES.YES);
+              }}
               disabled={isPlacingBet || !betAmount}
             >
               {isPlacingBet ? 'Placing...' : 'Bet Yes'}
             </button>
             <button
               className="bet-button no"
-              onClick={() => handlePlaceBet(MARKET_SIDES.NO)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePlaceBet(MARKET_SIDES.NO);
+              }}
               disabled={isPlacingBet || !betAmount}
             >
               {isPlacingBet ? 'Placing...' : 'Bet No'}

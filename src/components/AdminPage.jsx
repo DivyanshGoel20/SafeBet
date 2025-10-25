@@ -11,7 +11,7 @@ const AdminPage = () => {
   
   const [showCreateMarket, setShowCreateMarket] = useState(false);
   const [marketData, setMarketData] = useState({
-    usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    usdcAddress: '0x75faf114eafb1BDbe2F0316DF893FD58CE46AA4d',
     aavePool: '',
     pythContract: '',
     pythPriceId: '',
@@ -19,6 +19,7 @@ const AdminPage = () => {
     resolveDate: '',
     question: ''
   });
+  const [displayTargetPrice, setDisplayTargetPrice] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [createError, setCreateError] = useState(null);
   const [createSuccess, setCreateSuccess] = useState(null);
@@ -31,8 +32,10 @@ const AdminPage = () => {
   }, [account, provider, checkAdminStatus]);
 
   useEffect(() => {
-    if (provider && account && factoryAddress) {
-      initializeMarketContext(provider, account, factoryAddress);
+    if (provider && account) {
+      // Use the factory address from the form if provided, otherwise let MarketContext use its default
+      const factoryAddr = factoryAddress || undefined;
+      initializeMarketContext(provider, account, factoryAddr);
     }
   }, [provider, account, factoryAddress, initializeMarketContext]);
 
@@ -61,7 +64,7 @@ const AdminPage = () => {
       
       setCreateSuccess(`Market created successfully! Transaction: ${result.hash}`);
       setMarketData({
-        usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+        usdcAddress: '0x75faf114eafb1BDbe2F0316DF893FD58CE46AA4d',
         aavePool: '',
         pythContract: '',
         pythPriceId: '',
@@ -69,6 +72,7 @@ const AdminPage = () => {
         resolveDate: '',
         question: ''
       });
+      setDisplayTargetPrice('');
       setShowCreateMarket(false);
     } catch (error) {
       setCreateError(error.message);
@@ -176,7 +180,7 @@ const AdminPage = () => {
                     type="text"
                     value={marketData.usdcAddress}
                     onChange={(e) => setMarketData(prev => ({ ...prev, usdcAddress: e.target.value }))}
-                    placeholder="0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                    placeholder="0x75faf114eafb1BDbe2F0316DF893FD58CE46AA4d"
                     required
                   />
                 </div>
@@ -217,15 +221,22 @@ const AdminPage = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Target Price *</label>
+                  <label>Target Price (USD) *</label>
                   <input
                     type="number"
                     step="0.01"
-                    value={marketData.targetPrice}
-                    onChange={(e) => setMarketData(prev => ({ ...prev, targetPrice: e.target.value }))}
-                    placeholder="400000000000"
+                    value={displayTargetPrice}
+                    onChange={(e) => {
+                      const displayValue = e.target.value;
+                      setDisplayTargetPrice(displayValue);
+                      // Convert to contract format (8 decimals)
+                      const contractValue = displayValue ? (parseFloat(displayValue) * 1e8).toString() : '';
+                      setMarketData(prev => ({ ...prev, targetPrice: contractValue }));
+                    }}
+                    placeholder="4000"
                     required
                   />
+                  <small className="form-help">Enter price in USD (e.g., 4000 for $4000)</small>
                 </div>
                 <div className="form-group">
                   <label>Resolve Date (Unix Timestamp) *</label>
@@ -241,7 +252,7 @@ const AdminPage = () => {
               </div>
 
               <div className="form-info">
-                <p><strong>Note:</strong> This will create a lossless prediction market using Aave for yield generation. All parameters must be valid contract addresses on Base network.</p>
+                <p><strong>Note:</strong> This will create a lossless prediction market using Aave for yield generation. All parameters must be valid contract addresses on Arbitrum Sepolia network.</p>
               </div>
 
               {createError && (

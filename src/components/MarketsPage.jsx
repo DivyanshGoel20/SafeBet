@@ -4,14 +4,17 @@ import { useWallet } from '../contexts/WalletContext';
 import MarketCard from './MarketCard';
 
 const MarketsPage = ({ onMarketClick }) => {
-  const { markets, loading, error, loadMarkets } = useMarket();
-  const { isConnected } = useWallet();
+  const { markets, loading, error, loadMarkets, initializeMarketContext } = useMarket();
+  const { isConnected, account, provider } = useWallet();
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
-    loadMarkets();
-  }, [loadMarkets]);
+    if (provider && account) {
+      // Use default factory address from MarketContext
+      initializeMarketContext(provider, account);
+    }
+  }, [provider, account, initializeMarketContext]);
 
   const filteredMarkets = markets.filter(market => {
     switch (filter) {
@@ -87,6 +90,16 @@ const MarketsPage = ({ onMarketClick }) => {
       </div>
 
       <div className="markets-controls">
+        <div className="controls-left">
+          <button 
+            onClick={loadMarkets} 
+            className="refresh-button"
+            disabled={loading}
+          >
+            {loading ? '🔄 Loading...' : '🔄 Refresh'}
+          </button>
+        </div>
+        
         <div className="filter-tabs">
           <button
             className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
@@ -200,6 +213,34 @@ const MarketsPage = ({ onMarketClick }) => {
           align-items: center;
           flex-wrap: wrap;
           gap: 24px;
+        }
+
+        .controls-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .refresh-button {
+          padding: 12px 20px;
+          border: 1px solid #475569;
+          background: #334155;
+          color: #e2e8f0;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: all 0.2s ease;
+        }
+
+        .refresh-button:hover:not(:disabled) {
+          background: #475569;
+          transform: translateY(-1px);
+        }
+
+        .refresh-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
         .filter-tabs {

@@ -44,12 +44,23 @@ export const MARKET_ABI = [
   'event MarketCancelled()'
 ];
 
-// Contract addresses (to be updated with deployed addresses)
+// USDC Contract ABI
+export const USDC_ABI = [
+  'function balanceOf(address owner) view returns (uint256)',
+  'function decimals() view returns (uint8)',
+  'function symbol() view returns (string)',
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function transfer(address to, uint256 amount) returns (bool)',
+  'function transferFrom(address from, address to, uint256 amount) returns (bool)'
+];
+
+// Contract addresses for Arbitrum Sepolia Testnet
 export const CONTRACT_ADDRESSES = {
-  MARKET_FACTORY: '0xfae0F8cDD9c6ac8A3D6083DA5d20374367bBF6D7', // Will be provided by user
-  USDC: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // USDC on Base
-  AAVE_POOL: '', // Aave Pool address on Base
-  PYTH: '' // Pyth contract address on Base
+  MARKET_FACTORY: '0xDd844365a2D55982B9f1B03d78Fb317EdAf87200', // MarketFactory on Arbitrum Sepolia
+  USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // USDC on Arbitrum Sepolia
+  AAVE_POOL: '', // Aave Pool address on Arbitrum Sepolia
+  PYTH: '' // Pyth contract address on Arbitrum Sepolia
 };
 
 // Market States
@@ -166,4 +177,23 @@ export const hasUserClaimed = async (provider, marketAddress, userAddress) => {
 export const getTimeLeftForBetting = async (provider, marketAddress) => {
   const market = getMarketContract(provider, marketAddress);
   return await market.timeLeftForBetting();
+};
+
+// Helper function to create USDC contract instance
+export const getUSDCContract = (provider, usdcAddress) => {
+  return new ethers.Contract(usdcAddress, USDC_ABI, provider);
+};
+
+// Helper function to check USDC allowance
+export const getUSDCAllowance = async (provider, usdcAddress, owner, spender) => {
+  const usdc = getUSDCContract(provider, usdcAddress);
+  return await usdc.allowance(owner, spender);
+};
+
+// Helper function to approve USDC spending
+export const approveUSDC = async (provider, usdcAddress, spender, amount) => {
+  const usdc = getUSDCContract(provider, usdcAddress);
+  const signer = await provider.getSigner();
+  const tx = await usdc.connect(signer).approve(spender, amount);
+  return tx;
 };
