@@ -142,6 +142,7 @@ const MarketDetail = ({ marketAddress, onBack }) => {
     }
   };
 
+
   const handleResolveMarket = async () => {
     if (!isConnected || !account) {
       setError('Please connect your wallet first');
@@ -862,13 +863,20 @@ const MarketDetail = ({ marketAddress, onBack }) => {
           border: 1px solid #059669;
         }
 
-        /* Responsive Design */
-        @media (max-width: 1200px) {
-          .market-layout {
-            grid-template-columns: 1fr 350px;
-            gap: 24px;
-          }
+        /* Bridge Section */
+        .bridge-section {
+          margin-top: 20px;
+          padding-top: 20px;
+          border-top: 1px solid #475569;
         }
+
+        .bridge-text {
+          color: #94a3b8;
+          font-size: 14px;
+          margin: 0 0 12px 0;
+          text-align: center;
+        }
+
 
         @media (max-width: 968px) {
           .market-layout {

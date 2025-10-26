@@ -10,12 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aave/react": "^0.7.0",
-    "@avail-project/nexus-widgets": "^0.0.5",
+    "@avail-project/nexus-widgets": "^0.0.6",
     "@blockscout/app-sdk": "^0.1.2",
+    "es-toolkit": "^1.41.0",
     "esbuild": "^0.25.11",
     "ethers": "^6.8.1",
     "gsap": "^3.12.2",
+    "long": "^5.3.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
