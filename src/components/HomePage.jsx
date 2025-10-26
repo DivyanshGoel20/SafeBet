@@ -12,7 +12,7 @@ const HomePage = ({ onNavigate }) => {
         <div className="hero-content">
           <div className="hero-text">
             <h1 className="hero-title">
-              🎯 Lossless Prediction Markets
+              SafeBet
             </h1>
             <p className="hero-subtitle">
               Bet on outcomes, earn yield, never lose your principal. 

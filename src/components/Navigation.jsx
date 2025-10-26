@@ -18,7 +18,7 @@ const Navigation = ({ currentPage, onNavigate }) => {
     <nav className="navigation">
       <div className="nav-container">
         <div className="nav-brand">
-          <h1>🎯 Lossless Markets</h1>
+          <h1>SafeBet</h1>
         </div>
         
         <div className="nav-links">
