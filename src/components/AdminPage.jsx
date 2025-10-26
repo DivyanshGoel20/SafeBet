@@ -18,7 +18,8 @@ const AdminPage = () => {
     pythPriceId: '',
     targetPrice: '',
     resolveDate: '',
-    question: ''
+    question: '',
+    symbol: ''
   });
   const [displayTargetPrice, setDisplayTargetPrice] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -60,7 +61,8 @@ const AdminPage = () => {
         pythPriceId: pythPriceIdBytes,
         targetPrice: targetPriceFormatted,
         resolveDate: resolveTimestamp,
-        question: marketData.question
+        question: marketData.question,
+        symbol: marketData.symbol
       });
       
       setCreateSuccess(`Market created successfully! Transaction: ${result.hash}`);
@@ -71,7 +73,8 @@ const AdminPage = () => {
         pythPriceId: '',
         targetPrice: '',
         resolveDate: '',
-        question: ''
+        question: '',
+        symbol: ''
       });
       setDisplayTargetPrice('');
       setShowCreateMarket(false);
@@ -176,6 +179,20 @@ const AdminPage = () => {
 
               <div className="form-row">
                 <div className="form-group">
+                  <label>Trading Symbol *</label>
+                  <input
+                    type="text"
+                    value={marketData.symbol}
+                    onChange={(e) => setMarketData(prev => ({ ...prev, symbol: e.target.value }))}
+                    placeholder="e.g., BTCUSD, ETHUSD, BTC/ETH"
+                    required
+                  />
+                  <small className="form-help">Trading symbol for the chart (e.g., BTCUSD, ETHUSD)</small>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
                   <label>USDC Contract Address *</label>
                   <input
                     type="text"
@@ -234,10 +251,10 @@ const AdminPage = () => {
                       const contractValue = displayValue ? (parseFloat(displayValue) * 1e8).toString() : '';
                       setMarketData(prev => ({ ...prev, targetPrice: contractValue }));
                     }}
-                    placeholder="4000"
+                    placeholder=""
                     required
                   />
-                  <small className="form-help">Enter price in USD (e.g., 4000 for $4000)</small>
+                  <small className="form-help"></small>
                 </div>
                 <div className="form-group">
                   <label>Resolve Date (Unix Timestamp) *</label>
@@ -250,10 +267,6 @@ const AdminPage = () => {
                   />
                   <small className="form-help">Enter Unix timestamp (e.g., 1761829200 for a specific date)</small>
                 </div>
-              </div>
-
-              <div className="form-info">
-                <p><strong>Note:</strong> This will create a lossless prediction market using Aave for yield generation. All parameters must be valid contract addresses on Arbitrum Sepolia network.</p>
               </div>
 
               {createError && (
@@ -308,6 +321,10 @@ const AdminPage = () => {
                     <div className="detail-item">
                       <span className="detail-label">Address:</span>
                       <span className="detail-value">{market.address.slice(0, 6)}...{market.address.slice(-4)}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Symbol:</span>
+                      <span className="detail-value">{market.symbol || 'N/A'}</span>
                     </div>
                     <div className="detail-item">
                       <span className="detail-label">Target Price:</span>

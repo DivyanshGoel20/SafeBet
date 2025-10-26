@@ -6,7 +6,7 @@ import "./Market.sol";
 contract MarketFactory {
     address public owner;
     address[] public allMarkets;
-    event MarketCreated(address indexed marketAddress, address indexed creator, string question, uint256 resolveDate);
+    event MarketCreated(address indexed marketAddress, address indexed creator, string question, uint256 resolveDate, string symbol);
 
     constructor() {
         owner = msg.sender; // The deployer becomes the admin
@@ -24,7 +24,8 @@ contract MarketFactory {
         bytes32 pythPriceId,        // Pyth price id for token (e.g., ETH/USD price id)
         int256 targetPrice,         // target price in same units as Pyth price (frontend must format)
         uint256 resolveDate,        // unix timestamp when market will be resolved
-        string memory question
+        string memory question,
+        string memory symbol
     ) external onlyOwner() returns (address) {
         require(resolveDate > block.timestamp, "resolveDate must be in future");
         Market m = new Market(
@@ -35,10 +36,11 @@ contract MarketFactory {
             pythPriceId,
             targetPrice,
             resolveDate,
-            question
+            question,
+            symbol
         );
         allMarkets.push(address(m));
-        emit MarketCreated(address(m), msg.sender, question, resolveDate);
+        emit MarketCreated(address(m), msg.sender, question, resolveDate, symbol);
         return address(m);
     }
 

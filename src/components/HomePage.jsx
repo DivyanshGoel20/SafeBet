@@ -467,7 +467,9 @@ const HomePage = () => {
             font-size: 28px;
           }
         }
+
       `}</style>
+
     </div>
   );
 };

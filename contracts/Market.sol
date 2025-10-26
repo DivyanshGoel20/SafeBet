@@ -39,6 +39,7 @@ contract Market {
     int256 public immutable targetPrice;
     uint256 public immutable resolveDate;
     string public question;
+    string public symbol;
 
     uint256 public immutable bettingDeadline;
 
@@ -88,7 +89,8 @@ contract Market {
         bytes32 _pythPriceId,
         int256 _targetPrice,
         uint256 _resolveDate,
-        string memory _question
+        string memory _question,
+        string memory _symbol
     ) {
         require(_resolveDate > block.timestamp, "resolveDate in past");
         factory = msg.sender; // factory contract deploys this market
@@ -100,6 +102,7 @@ contract Market {
         targetPrice = _targetPrice;
         resolveDate = _resolveDate;
         question = _question;
+        symbol = _symbol;
         marketState = State.Active;
 
         bettingDeadline = block.timestamp + 7 days;

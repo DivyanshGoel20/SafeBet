@@ -4,6 +4,7 @@ import { useWallet } from '../contexts/WalletContext';
 import { ethers } from 'ethers';
 import { MARKET_STATES, MARKET_SIDES, extractPriceFromQuestion } from '../utils/contracts';
 import TransactionHistory from './TransactionHistory';
+import TradingViewWidget from './TradingViewWidget';
 
 const MarketDetail = ({ marketAddress, onBack }) => {
   const { getMarket, placeBet, resolveMarket, claimWinnings, getUserMarketStake, hasUserClaimedFromMarket, getMarketTimeLeft } = useMarket();
@@ -231,6 +232,10 @@ const MarketDetail = ({ marketAddress, onBack }) => {
         <div className="info-card">
           <h3>Market Details</h3>
           <div className="info-item">
+            <span className="label">Symbol:</span>
+            <span className="value">{market.symbol || 'N/A'}</span>
+          </div>
+          <div className="info-item">
             <span className="label">Target Price:</span>
             <span className="value">${extractPriceFromQuestion(market.question)}</span>
           </div>
@@ -277,6 +282,18 @@ const MarketDetail = ({ marketAddress, onBack }) => {
           )}
         </div>
       </div>
+
+      {/* TradingView Chart */}
+      {console.log('MarketDetail - Market data:', market)}
+      {console.log('MarketDetail - Market symbol:', market.symbol)}
+      {market.symbol ? (
+        <TradingViewWidget symbol={market.symbol} height={400} />
+      ) : (
+        <div className="no-chart-message">
+          <p>📊 No trading symbol available for this market</p>
+          <small>Chart will appear when a trading symbol is set</small>
+        </div>
+      )}
 
       {account && (
         <div className="user-section">
@@ -698,6 +715,26 @@ const MarketDetail = ({ marketAddress, onBack }) => {
         .resolve-button.disabled:hover {
           background: #64748b;
           transform: none;
+        }
+
+        .no-chart-message {
+          background: #334155;
+          border: 1px solid #475569;
+          border-radius: 12px;
+          padding: 40px;
+          text-align: center;
+          margin: 20px 0;
+        }
+
+        .no-chart-message p {
+          color: #f1f5f9;
+          font-size: 18px;
+          margin: 0 0 8px 0;
+        }
+
+        .no-chart-message small {
+          color: #94a3b8;
+          font-size: 14px;
         }
 
         .claim-button {

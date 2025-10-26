@@ -151,6 +151,10 @@ const MarketCard = ({ market, onClick }) => {
 
       <div className="market-info">
         <div className="info-row">
+          <span className="info-label">Symbol:</span>
+          <span className="info-value">{market.symbol || 'N/A'}</span>
+        </div>
+        <div className="info-row">
           <span className="info-label">Target Price:</span>
           <span className="info-value">${extractPriceFromQuestion(market.question)}</span>
         </div>

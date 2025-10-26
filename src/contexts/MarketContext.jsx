@@ -35,7 +35,21 @@ export const MarketProvider = ({ children }) => {
   const [account, setAccount] = useState(null);
   const { openTxToast } = useNotification();
 
-  // Initialize market context with provider and account
+  // Helper function to get symbol from localStorage
+  const getMarketSymbol = (marketAddress) => {
+    const marketSymbols = JSON.parse(localStorage.getItem('marketSymbols') || '{}');
+    const symbol = marketSymbols[marketAddress] || null;
+    console.log('Getting symbol for market:', { marketAddress, symbol, allSymbols: marketSymbols });
+    return symbol;
+  };
+
+  // Helper function to set symbol in localStorage
+  const setMarketSymbol = (marketAddress, symbol) => {
+    const marketSymbols = JSON.parse(localStorage.getItem('marketSymbols') || '{}');
+    marketSymbols[marketAddress] = symbol;
+    localStorage.setItem('marketSymbols', JSON.stringify(marketSymbols));
+    console.log('Symbol stored in localStorage:', { marketAddress, symbol, allSymbols: marketSymbols });
+  };
   const initializeMarketContext = (providerInstance, accountAddress, factoryAddr) => {
     console.log('Initializing MarketContext:', { providerInstance: !!providerInstance, accountAddress, factoryAddr });
     setProvider(providerInstance);
@@ -71,9 +85,18 @@ export const MarketProvider = ({ children }) => {
         })
       );
 
-      // Filter out null results and set markets
+      // Filter out null results and add symbol from localStorage
       const validMarkets = marketDetails.filter(market => market !== null);
-      setMarkets(validMarkets);
+      const marketsWithSymbols = validMarkets.map(market => {
+        const symbol = getMarketSymbol(market.address);
+        console.log('Loading market with symbol:', { address: market.address, symbol, market });
+        return {
+          ...market,
+          symbol: symbol
+        };
+      });
+      console.log('All markets with symbols:', marketsWithSymbols);
+      setMarkets(marketsWithSymbols);
     } catch (err) {
       console.error('Error loading markets:', err);
       setError(err.message);
@@ -103,7 +126,8 @@ export const MarketProvider = ({ children }) => {
       pythPriceId,
       targetPrice,
       resolveDate,
-      question
+      question,
+      symbol
     } = marketData;
 
     try {
@@ -118,6 +142,27 @@ export const MarketProvider = ({ children }) => {
       );
 
       await tx.wait();
+      
+      // Get the market address from the transaction receipt
+      const receipt = await tx.wait();
+      const marketCreatedEvent = receipt.logs.find(log => {
+        try {
+          const decoded = factory.interface.parseLog(log);
+          return decoded.name === 'MarketCreated';
+        } catch (e) {
+          return false;
+        }
+      });
+      
+      const marketAddress = marketCreatedEvent ? marketCreatedEvent.address : null;
+      
+      // Store symbol locally for frontend use (not sent to contract)
+      if (symbol && marketAddress) {
+        console.log('Storing symbol:', { symbol, marketAddress });
+        setMarketSymbol(marketAddress, symbol);
+      } else {
+        console.log('Symbol or marketAddress missing:', { symbol, marketAddress });
+      }
       
       // Show BlockScout transaction toast
       await openTxToast("1500", tx.hash); // Arbitrum Sepolia chain ID
@@ -412,7 +457,9 @@ export const MarketProvider = ({ children }) => {
     getUserMarketStake,
     hasUserClaimedFromMarket,
     getMarketTimeLeft,
-    checkAndHandleAllowance
+    checkAndHandleAllowance,
+    getMarketSymbol,
+    setMarketSymbol
   };
 
   return (
