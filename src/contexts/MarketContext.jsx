@@ -8,6 +8,7 @@ import {
   getTimeLeftForBetting,
   getUSDCAllowance,
   approveUSDC,
+  fetchHermesPriceUpdate,
   MARKET_STATES,
   MARKET_SIDES,
   getMarketFactoryContract,
@@ -30,26 +31,11 @@ export const MarketProvider = ({ children }) => {
   const [markets, setMarkets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [factoryAddress, setFactoryAddress] = useState('0xDd844365a2D55982B9f1B03d78Fb317EdAf87200');
+  const [factoryAddress, setFactoryAddress] = useState('0x707d5C8871F5cA6fa985fB8b3Be9dff8c09C9ed1');
   const [provider, setProvider] = useState(null);
   const [account, setAccount] = useState(null);
   const { openTxToast } = useNotification();
 
-  // Helper function to get symbol from localStorage
-  const getMarketSymbol = (marketAddress) => {
-    const marketSymbols = JSON.parse(localStorage.getItem('marketSymbols') || '{}');
-    const symbol = marketSymbols[marketAddress] || null;
-    console.log('Getting symbol for market:', { marketAddress, symbol, allSymbols: marketSymbols });
-    return symbol;
-  };
-
-  // Helper function to set symbol in localStorage
-  const setMarketSymbol = (marketAddress, symbol) => {
-    const marketSymbols = JSON.parse(localStorage.getItem('marketSymbols') || '{}');
-    marketSymbols[marketAddress] = symbol;
-    localStorage.setItem('marketSymbols', JSON.stringify(marketSymbols));
-    console.log('Symbol stored in localStorage:', { marketAddress, symbol, allSymbols: marketSymbols });
-  };
   const initializeMarketContext = (providerInstance, accountAddress, factoryAddr) => {
     console.log('Initializing MarketContext:', { providerInstance: !!providerInstance, accountAddress, factoryAddr });
     setProvider(providerInstance);
@@ -85,18 +71,9 @@ export const MarketProvider = ({ children }) => {
         })
       );
 
-      // Filter out null results and add symbol from localStorage
+      // Filter out null results (symbol is now fetched from contract)
       const validMarkets = marketDetails.filter(market => market !== null);
-      const marketsWithSymbols = validMarkets.map(market => {
-        const symbol = getMarketSymbol(market.address);
-        console.log('Loading market with symbol:', { address: market.address, symbol, market });
-        return {
-          ...market,
-          symbol: symbol
-        };
-      });
-      console.log('All markets with symbols:', marketsWithSymbols);
-      setMarkets(marketsWithSymbols);
+      setMarkets(validMarkets);
     } catch (err) {
       console.error('Error loading markets:', err);
       setError(err.message);
@@ -138,7 +115,8 @@ export const MarketProvider = ({ children }) => {
         pythPriceId,
         targetPrice,
         resolveDate,
-        question
+        question,
+        symbol
       );
 
       await tx.wait();
@@ -155,14 +133,6 @@ export const MarketProvider = ({ children }) => {
       });
       
       const marketAddress = marketCreatedEvent ? marketCreatedEvent.address : null;
-      
-      // Store symbol locally for frontend use (not sent to contract)
-      if (symbol && marketAddress) {
-        console.log('Storing symbol:', { symbol, marketAddress });
-        setMarketSymbol(marketAddress, symbol);
-      } else {
-        console.log('Symbol or marketAddress missing:', { symbol, marketAddress });
-      }
       
       // Show BlockScout transaction toast
       await openTxToast("1500", tx.hash); // Arbitrum Sepolia chain ID
@@ -249,7 +219,7 @@ export const MarketProvider = ({ children }) => {
   };
 
   // Resolve a market
-  const resolveMarket = async (marketAddress, priceUpdate) => {
+  const resolveMarket = async (marketAddress) => {
     if (!provider || !account) {
       throw new Error('Provider or account not set');
     }
@@ -258,13 +228,30 @@ export const MarketProvider = ({ children }) => {
     const signer = await provider.getSigner();
 
     try {
-      // Get the update fee first
-      const updateFee = await market.connect(signer).getUpdateFee(priceUpdate);
+      console.log('Starting market resolution for:', marketAddress);
+      
+      // Get market details to fetch pythPriceId
+      const marketDetails = await getMarketDetails(provider, marketAddress);
+      console.log('Market details:', marketDetails);
+      
+      if (!marketDetails.pythPriceId) {
+        throw new Error('No Pyth price ID found for this market');
+      }
+      
+      // Fetch price update from Hermes API
+      console.log('Fetching price update from Hermes API...');
+      const priceUpdate = await fetchHermesPriceUpdate(marketDetails.pythPriceId);
+      console.log('Price update data received:', priceUpdate);
+      
+      // Send ETH value (0.00001 ETH = 10000000000000 wei)
+      const ethValue = ethers.parseEther("0.00001");
+      console.log('Sending ETH value:', ethValue.toString());
       
       const tx = await market.connect(signer).resolveMarket(priceUpdate, {
-        value: updateFee
+        value: ethValue
       });
 
+      console.log('Transaction sent:', tx.hash);
       await tx.wait();
       
       // Show BlockScout transaction toast
@@ -457,9 +444,7 @@ export const MarketProvider = ({ children }) => {
     getUserMarketStake,
     hasUserClaimedFromMarket,
     getMarketTimeLeft,
-    checkAndHandleAllowance,
-    getMarketSymbol,
-    setMarketSymbol
+    checkAndHandleAllowance
   };
 
   return (

@@ -20,7 +20,6 @@ const MarketDetail = ({ marketAddress, onBack }) => {
   const [isClaiming, setIsClaiming] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [priceUpdate, setPriceUpdate] = useState('');
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
 
   useEffect(() => {
@@ -154,20 +153,13 @@ const MarketDetail = ({ marketAddress, onBack }) => {
       return;
     }
 
-    if (timeLeft > 0) {
-      setError('Market is still active. Wait for betting to end.');
-      return;
-    }
-
     setIsResolving(true);
     setError(null);
     setSuccess(null);
 
     try {
-      // For now, we'll use an empty price update array
-      // In a real implementation, you'd need to provide actual Pyth price update data
-      const priceUpdateData = priceUpdate ? [priceUpdate] : [];
-      const tx = await resolveMarket(marketAddress, priceUpdateData);
+      // Call resolveMarket without priceUpdate parameter - it will fetch from Hermes API
+      const tx = await resolveMarket(marketAddress);
       setSuccess(`Market resolved successfully! Transaction: ${tx.hash}`);
       await loadMarket();
     } catch (err) {
@@ -284,8 +276,6 @@ const MarketDetail = ({ marketAddress, onBack }) => {
       </div>
 
       {/* TradingView Chart */}
-      {console.log('MarketDetail - Market data:', market)}
-      {console.log('MarketDetail - Market symbol:', market.symbol)}
       {market.symbol ? (
         <TradingViewWidget symbol={market.symbol} height={400} />
       ) : (
@@ -349,26 +339,13 @@ const MarketDetail = ({ marketAddress, onBack }) => {
       {market.marketState === MARKET_STATES.ACTIVE && isConnected && (
         <div className="resolution-section">
           <h3>Resolve Market</h3>
-          {timeLeft > 0 ? (
-            <p>Betting is still active. You can resolve this market after betting ends.</p>
-          ) : (
-            <p>Betting has ended. You can now resolve this market.</p>
-          )}
-          <div className="resolve-input">
-            <input
-              type="text"
-              placeholder="Price update data (optional)"
-              value={priceUpdate}
-              onChange={(e) => setPriceUpdate(e.target.value)}
-              disabled={isResolving || timeLeft > 0}
-            />
-          </div>
+          <p>Resolve this market using the latest price data from Pyth Oracle via Hermes API.</p>
           <button
-            className={`resolve-button ${timeLeft > 0 ? 'disabled' : ''}`}
+            className="resolve-button"
             onClick={handleResolveMarket}
-            disabled={isResolving || timeLeft > 0}
+            disabled={isResolving}
           >
-            {isResolving ? 'Resolving...' : timeLeft > 0 ? 'Resolve Market (Wait for betting to end)' : 'Resolve Market'}
+            {isResolving ? 'Resolving...' : 'Resolve Market'}
           </button>
         </div>
       )}

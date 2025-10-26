@@ -2,11 +2,11 @@ import { ethers } from 'ethers';
 
 // MarketFactory Contract ABI
 export const MARKET_FACTORY_ABI = [
-  'function createMarket(address usdcAddress, address aavePool, address pythContract, bytes32 pythPriceId, int256 targetPrice, uint256 resolveDate, string memory question) external returns (address)',
+  'function createMarket(address usdcAddress, address aavePool, address pythContract, bytes32 pythPriceId, int256 targetPrice, uint256 resolveDate, string memory question, string memory symbol) external returns (address)',
   'function getAllMarkets() external view returns (address[])',
   'function numberOfMarkets() external view returns (uint256)',
   'function owner() external view returns (address)',
-  'event MarketCreated(address indexed marketAddress, address indexed creator, string question, uint256 resolveDate)'
+  'event MarketCreated(address indexed marketAddress, address indexed creator, string question, uint256 resolveDate, string symbol)'
 ];
 
 // Market Contract ABI
@@ -20,6 +20,7 @@ export const MARKET_ABI = [
   'function targetPrice() external view returns (int256)',
   'function resolveDate() external view returns (uint256)',
   'function question() external view returns (string)',
+  'function symbol() external view returns (string)',
   'function bettingDeadline() external view returns (uint256)',
   'function marketState() external view returns (uint8)',
   'function winningSide() external view returns (uint8)',
@@ -57,7 +58,7 @@ export const USDC_ABI = [
 
 // Contract addresses for Arbitrum Sepolia Testnet
 export const CONTRACT_ADDRESSES = {
-  MARKET_FACTORY: '0xDd844365a2D55982B9f1B03d78Fb317EdAf87200', // MarketFactory on Arbitrum Sepolia
+  MARKET_FACTORY: '0x707d5C8871F5cA6fa985fB8b3Be9dff8c09C9ed1', // MarketFactory on Arbitrum Sepolia
   USDC: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // USDC on Arbitrum Sepolia
   AAVE_POOL: '', // Aave Pool address on Arbitrum Sepolia
   PYTH: '' // Pyth contract address on Arbitrum Sepolia
@@ -107,6 +108,7 @@ export const getMarketDetails = async (provider, marketAddress) => {
     targetPrice,
     resolveDate,
     question,
+    symbol,
     bettingDeadline,
     marketState,
     winningSide,
@@ -125,6 +127,7 @@ export const getMarketDetails = async (provider, marketAddress) => {
     market.targetPrice(),
     market.resolveDate(),
     market.question(),
+    market.symbol(),
     market.bettingDeadline(),
     market.marketState(),
     market.winningSide(),
@@ -146,6 +149,7 @@ export const getMarketDetails = async (provider, marketAddress) => {
     targetPrice: targetPrice.toString(),
     resolveDate: resolveDate.toString(),
     question,
+    symbol,
     bettingDeadline: bettingDeadline.toString(),
     marketState: Number(marketState),
     winningSide: Number(winningSide),
@@ -203,6 +207,38 @@ export const formatTargetPrice = (targetPrice) => {
   if (!targetPrice) return '0.00';
   const price = Number(targetPrice) / 1e8;
   return price.toFixed(2);
+};
+
+// Helper function to fetch price update from Hermes API
+export const fetchHermesPriceUpdate = async (pythPriceId) => {
+  try {
+    console.log('Fetching Hermes price update for Pyth ID:', pythPriceId);
+    
+    // Convert pythPriceId to hex string if it's not already
+    const priceIdHex = pythPriceId.startsWith('0x') ? pythPriceId.slice(2) : pythPriceId;
+    
+    const response = await fetch(`https://hermes.pyth.network/v2/updates/price/latest?ids%5B%5D=${priceIdHex}`);
+    
+    if (!response.ok) {
+      throw new Error(`Hermes API error: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log('Hermes API response:', data);
+    
+    if (!data.binary || !data.binary.data || data.binary.data.length === 0) {
+      throw new Error('No price update data received from Hermes');
+    }
+    
+    // Format the data as required by the contract: ["0x{data}"]
+    const formattedData = data.binary.data.map(hexData => `0x${hexData}`);
+    console.log('Formatted data for contract:', formattedData);
+    
+    return formattedData;
+  } catch (error) {
+    console.error('Error fetching Hermes price update:', error);
+    throw error;
+  }
 };
 
 // Helper function to extract target price from question text

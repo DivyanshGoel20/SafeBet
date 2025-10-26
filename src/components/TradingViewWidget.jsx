@@ -3,7 +3,6 @@ import React, { useEffect, useRef } from "react";
 let tvScriptLoadingPromise;
 
 const TradingViewWidget = ({ symbol, height = 400 }) => {
-  console.log('TradingViewWidget received symbol:', symbol);
   const onLoadScriptRef = useRef();
 
   useEffect(() => {
@@ -28,9 +27,7 @@ const TradingViewWidget = ({ symbol, height = 400 }) => {
     return () => (onLoadScriptRef.current = null);
 
     function createWidget() {
-      console.log('Creating TradingView widget for symbol:', symbol);
       const containerId = `tradingview-${symbol.replace(/[^a-zA-Z0-9]/g, '')}`;
-      console.log('Container ID:', containerId);
       
       // Remove existing widget if it exists
       const existingWidget = document.getElementById(containerId);
@@ -39,7 +36,6 @@ const TradingViewWidget = ({ symbol, height = 400 }) => {
       }
 
       if (document.getElementById(containerId) && "TradingView" in window) {
-        console.log('Creating TradingView widget with symbol:', symbol);
         new window.TradingView.widget({
           autosize: true,
           symbol: symbol || "BTCUSD",
