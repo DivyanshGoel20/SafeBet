@@ -2,7 +2,7 @@ import React from 'react';
 import { useWallet } from '../contexts/WalletContext';
 import ConnectWallet from './ConnectWallet';
 
-const HomePage = () => {
+const HomePage = ({ onNavigate }) => {
   const { isConnected, account } = useWallet();
 
   return (
@@ -16,7 +16,7 @@ const HomePage = () => {
             </h1>
             <p className="hero-subtitle">
               Bet on outcomes, earn yield, never lose your principal. 
-              The future of risk-free prediction markets on Base.
+              The future of risk-free prediction markets on Ethereum networks.
             </p>
             <div className="hero-stats">
               <div className="stat-card">
@@ -42,17 +42,14 @@ const HomePage = () => {
               </div>
             </div>
           </div>
-          <div className="hero-actions">
-            {isConnected ? (
-              <div className="connected-wallet">
-                <div className="wallet-info">
-                  <div className="wallet-address">
-                    {account?.slice(0, 6)}...{account?.slice(-4)}
-                  </div>
-                  <div className="wallet-status">Connected</div>
-                </div>
-              </div>
-            ) : (
+        </div>
+      </section>
+
+      {/* Wallet Connection Section */}
+      <section className="wallet-section">
+        <div className="wallet-container">
+          <div className="wallet-connection-center">
+            {isConnected ? <></> : (
               <div className="connect-wallet-prompt">
                 <div className="prompt-content">
                   <div className="prompt-icon">🔗</div>
@@ -85,11 +82,6 @@ const HomePage = () => {
               <div className="feature-icon">⚡</div>
               <h3>Instant Settlement</h3>
               <p>Markets resolve automatically using Pyth price feeds for fair and transparent outcomes.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">🌐</div>
-              <h3>Base Network</h3>
-              <p>Built on Base for fast, cheap transactions with Ethereum security.</p>
             </div>
           </div>
         </div>
@@ -124,19 +116,6 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-
-      {/* CTA Section */}
-      {isConnected && (
-        <section className="cta-section">
-          <div className="cta-container">
-            <h2>Ready to Start Predicting?</h2>
-            <p>Explore active markets and start earning yield on your predictions.</p>
-            <button className="cta-button" onClick={() => window.location.hash = '#markets'}>
-              View Markets
-            </button>
-          </div>
-        </section>
-      )}
 
       <style jsx="true">{`
         .homepage {
@@ -222,11 +201,36 @@ const HomePage = () => {
 
         .hero-actions {
           margin-top: 40px;
+          display: flex;
+          justify-content: center;
+          width: 100%;
+        }
+
+        .wallet-section {
+          padding: 60px 0;
+          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
+
+        .wallet-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 24px;
+        }
+
+        .wallet-connection-center {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          max-width: 600px;
+          margin: 0 auto;
         }
 
         .connected-wallet {
           display: flex;
-          justify-content: center;
+          flex-direction: column;
+          align-items: center;
+          gap: 20px;
         }
 
         .wallet-info {
@@ -235,6 +239,25 @@ const HomePage = () => {
           border-radius: 12px;
           border: 1px solid rgba(34, 197, 94, 0.2);
           text-align: center;
+        }
+
+        .view-markets-btn {
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          color: white;
+          border: none;
+          padding: 16px 32px;
+          border-radius: 12px;
+          font-size: 18px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+          min-width: 200px;
+        }
+
+        .view-markets-btn:hover {
+          box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+          transform: translateY(-2px);
         }
 
         .wallet-address {

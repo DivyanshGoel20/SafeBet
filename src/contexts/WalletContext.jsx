@@ -68,86 +68,93 @@ export const WalletProvider = ({ children }) => {
   };
 
   const connectWallet = async (walletType = 'metamask') => {
-    // Check for different wallet providers
-    let provider = null;
-    
-    if (walletType === 'metamask' && window.ethereum) {
-      provider = window.ethereum;
-    } else if (walletType === 'rabby' && window.rabby) {
-      provider = window.rabby;
-    } else if (walletType === 'coinbase' && window.coinbaseWalletExtension) {
-      provider = window.coinbaseWalletExtension;
-    } else if (walletType === 'walletconnect') {
-      // For WalletConnect, we'd need to implement the WalletConnect provider
-      setError('WalletConnect integration coming soon!');
-      return;
-    } else {
-      setError(`${walletType.charAt(0).toUpperCase() + walletType.slice(1)} is not installed. Please install the wallet to continue.`);
-      return;
-    }
-
-    if (!provider) {
-      setError('No wallet provider found. Please install a supported wallet.');
-      return;
-    }
-
     setIsConnecting(true);
     setError(null);
-
+    
     try {
-      // Request account access
-      const accounts = await provider.request({
-        method: 'eth_requestAccounts'
-      });
-
-      // Check if we're on Arbitrum Sepolia Testnet
-      const chainId = await provider.request({ method: 'eth_chainId' });
-      const arbitrumSepoliaChainId = '0x66eee'; // Arbitrum Sepolia Testnet
-
-      if (chainId !== arbitrumSepoliaChainId) {
-        try {
-          await provider.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: arbitrumSepoliaChainId }],
-          });
-        } catch (switchError) {
-          // If the network doesn't exist, add it
-          if (switchError.code === 4902) {
-            await provider.request({
-              method: 'wallet_addEthereumChain',
-              params: [
-                {
-                  chainId: arbitrumSepoliaChainId,
-                  chainName: 'Arbitrum Sepolia',
-                  nativeCurrency: {
-                    name: 'Ethereum',
-                    symbol: 'ETH',
-                    decimals: 18,
-                  },
-                  rpcUrls: ['https://sepolia-rollup.arbitrum.io/rpc'],
-                  blockExplorerUrls: ['https://sepolia.arbiscan.io'],
-                },
-              ],
-            });
-          } else {
-            throw switchError;
-          }
+      let provider = null;
+      
+      // Improved wallet detection
+      if (walletType === 'metamask') {
+        if (window.ethereum && window.ethereum.isMetaMask) {
+          provider = window.ethereum;
+        } else {
+          throw new Error('MetaMask is not installed. Please install MetaMask to continue.');
+        }
+      } else if (walletType === 'rabby') {
+        if (window.ethereum && window.ethereum.isRabby) {
+          provider = window.ethereum;
+        } else {
+          throw new Error('Rabby wallet is not installed. Please install Rabby to continue.');
+        }
+      } else {
+        // Fallback to any available ethereum provider
+        if (window.ethereum) {
+          provider = window.ethereum;
+        } else {
+          throw new Error('No Ethereum wallet found. Please install MetaMask or Rabby wallet.');
         }
       }
 
-      // Create provider and signer
-      const ethersProvider = new ethers.BrowserProvider(provider);
-      const signer = await ethersProvider.getSigner();
-      const address = await signer.getAddress();
+      try {
+        // Request account access
+        const accounts = await provider.request({
+          method: 'eth_requestAccounts'
+        });
 
-      setAccount(address);
-      setProvider(ethersProvider);
-      setSigner(signer);
-      setIsConnected(true);
-      setIsConnecting(false);
-      
-      console.log(`Connected to ${walletType} on Arbitrum Sepolia Testnet`);
+        // Check if we're on Arbitrum Sepolia Testnet
+        const chainId = await provider.request({ method: 'eth_chainId' });
+        const arbitrumSepoliaChainId = '0x66eee'; // Arbitrum Sepolia Testnet
 
+        if (chainId !== arbitrumSepoliaChainId) {
+          try {
+            await provider.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: arbitrumSepoliaChainId }],
+            });
+          } catch (switchError) {
+            // If the network doesn't exist, add it
+            if (switchError.code === 4902) {
+              await provider.request({
+                method: 'wallet_addEthereumChain',
+                params: [
+                  {
+                    chainId: arbitrumSepoliaChainId,
+                    chainName: 'Arbitrum Sepolia',
+                    nativeCurrency: {
+                      name: 'Ethereum',
+                      symbol: 'ETH',
+                      decimals: 18,
+                    },
+                    rpcUrls: ['https://sepolia-rollup.arbitrum.io/rpc'],
+                    blockExplorerUrls: ['https://sepolia.arbiscan.io'],
+                  },
+                ],
+              });
+            } else {
+              throw switchError;
+            }
+          }
+        }
+
+        // Create provider and signer
+        const ethersProvider = new ethers.BrowserProvider(provider);
+        const signer = await ethersProvider.getSigner();
+        const address = await signer.getAddress();
+
+        setAccount(address);
+        setProvider(ethersProvider);
+        setSigner(signer);
+        setIsConnected(true);
+        setIsConnecting(false);
+        
+        console.log(`Connected to ${walletType} on Arbitrum Sepolia Testnet`);
+
+      } catch (err) {
+        console.error('Error connecting wallet:', err);
+        setError(err.message || 'Failed to connect wallet');
+        setIsConnecting(false);
+      }
     } catch (err) {
       console.error('Error connecting wallet:', err);
       setError(err.message || 'Failed to connect wallet');

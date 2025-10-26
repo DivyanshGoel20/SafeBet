@@ -19,11 +19,9 @@ const ConnectWallet = () => {
   const { openTxToast } = useNotification();
   const { openPopup } = useTransactionPopup();
 
-  const [showWalletOptions, setShowWalletOptions] = useState(false);
   const buttonRef = useRef(null);
   const walletInfoRef = useRef(null);
   const errorRef = useRef(null);
-  const optionsRef = useRef(null);
 
   // GSAP animations
   useEffect(() => {
@@ -44,44 +42,24 @@ const ConnectWallet = () => {
     }
   }, [error]);
 
-  useEffect(() => {
-    if (showWalletOptions && optionsRef.current) {
-      gsap.fromTo(optionsRef.current,
-        { opacity: 0, y: -10, scale: 0.95 },
-        { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: "back.out(1.7)" }
-      );
-    }
-  }, [showWalletOptions]);
-
   const walletOptions = [
     {
       name: 'MetaMask',
       icon: '🦊',
       description: 'Connect using MetaMask',
-      action: () => connectWallet('metamask')
+      action: () => connectWallet('metamask'),
+      isInstalled: () => typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask
     },
     {
       name: 'Rabby Wallet',
       icon: '🐰',
       description: 'Connect using Rabby Wallet',
-      action: () => connectWallet('rabby')
-    },
-    {
-      name: 'Coinbase Wallet',
-      icon: '🔵',
-      description: 'Connect using Coinbase Wallet',
-      action: () => connectWallet('coinbase')
-    },
-    {
-      name: 'WalletConnect',
-      icon: '🔗',
-      description: 'Connect using WalletConnect',
-      action: () => connectWallet('walletconnect')
+      action: () => connectWallet('rabby'),
+      isInstalled: () => typeof window.ethereum !== 'undefined' && window.ethereum.isRabby
     }
   ];
 
   const handleWalletConnect = async (walletType) => {
-    setShowWalletOptions(false);
     await connectWallet(walletType);
   };
 
@@ -128,7 +106,7 @@ const ConnectWallet = () => {
       });
 
       console.log('Transaction sent:', tx.hash);
-      await openTxToast('84532', tx.hash); // Base Sepolia chain ID
+      await openTxToast('1500', tx.hash); // Arbitrum Sepolia chain ID
     } catch (error) {
       console.error('Transaction failed:', error);
     }
@@ -137,14 +115,14 @@ const ConnectWallet = () => {
   const showTransactionHistory = () => {
     if (!account) return;
     openPopup({
-      chainId: '84532', // Base Sepolia chain ID
+      chainId: '1500', // Arbitrum Sepolia chain ID
       address: account
     });
   };
 
   const showAllTransactions = () => {
     openPopup({
-      chainId: '84532' // Base Sepolia chain ID
+      chainId: '1500' // Arbitrum Sepolia chain ID
     });
   };
 
@@ -152,53 +130,27 @@ const ConnectWallet = () => {
     <div className="connect-wallet-container">
       {!isConnected ? (
         <div className="connect-section">
-          <button
-            ref={buttonRef}
-            className="connect-button"
-            onClick={() => setShowWalletOptions(!showWalletOptions)}
-            disabled={isConnecting}
-            onMouseEnter={handleButtonHover}
-            onMouseLeave={handleButtonLeave}
-          >
-            {isConnecting ? (
-              <div className="loading-spinner">
-                <div className="spinner"></div>
-                Connecting...
-              </div>
-            ) : (
-              'Connect Wallet'
-            )}
-          </button>
-          
-          {showWalletOptions && (
-            <div ref={optionsRef} className="wallet-options">
-              <div className="wallet-options-header">
-                <h3>Choose Your Wallet</h3>
-                <button 
-                  className="close-btn"
-                  onClick={() => setShowWalletOptions(false)}
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="wallet-list">
-                {walletOptions.map((wallet, index) => (
-                  <button
-                    key={index}
-                    className="wallet-option"
-                    onClick={() => handleWalletConnect(wallet.name.toLowerCase())}
-                  >
-                    <div className="wallet-icon">{wallet.icon}</div>
-                    <div className="wallet-details">
-                      <div className="wallet-name">{wallet.name}</div>
-                      <div className="wallet-description">{wallet.description}</div>
-                    </div>
-                    <div className="wallet-arrow">→</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="connect-buttons">
+            <button
+              ref={buttonRef}
+              className="connect-button metamask"
+              onClick={() => handleWalletConnect('metamask')}
+              disabled={isConnecting || !walletOptions[0].isInstalled()}
+              onMouseEnter={handleButtonHover}
+              onMouseLeave={handleButtonLeave}
+            >
+              {isConnecting ? (
+                <div className="loading-spinner">
+                  <div className="spinner"></div>
+                  Connecting...
+                </div>
+              ) : (
+                <>
+                  🦊 Connect MetaMask
+                </>
+              )}
+            </button>
+          </div>
           
           {error && (
             <div ref={errorRef} className="error-message">
@@ -258,11 +210,11 @@ const ConnectWallet = () => {
                 onMouseEnter={handleButtonHover}
                 onMouseLeave={handleButtonLeave}
               >
-                🌐 All Base Sepolia Transactions
+                🌐 All Ethereum Transactions
               </button>
             </div>
             <p className="history-description">
-              View transaction history and explore the Base Sepolia network
+              View transaction history and explore the Ethereum ecosystem
             </p>
           </div>
         </div>
@@ -287,7 +239,33 @@ const ConnectWallet = () => {
           align-items: center;
         }
 
-        .connect-button {
+        .connect-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          width: 100%;
+        }
+
+        .connect-button.metamask {
+          background: linear-gradient(135deg, #f6851b 0%, #e2761b 100%);
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(246, 133, 27, 0.3);
+          min-width: 200px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+
+        .connect-button.rabby {
           background: linear-gradient(135deg, #059669 0%, #047857 100%);
           color: white;
           border: none;
@@ -298,7 +276,7 @@ const ConnectWallet = () => {
           cursor: pointer;
           transition: all 0.3s ease;
           box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
-          min-width: 160px;
+          min-width: 200px;
           height: 48px;
           display: flex;
           align-items: center;
@@ -306,7 +284,12 @@ const ConnectWallet = () => {
           gap: 8px;
         }
 
-        .connect-button:hover:not(:disabled) {
+        .connect-button.metamask:hover:not(:disabled) {
+          box-shadow: 0 6px 20px rgba(246, 133, 27, 0.4);
+          transform: translateY(-2px);
+        }
+
+        .connect-button.rabby:hover:not(:disabled) {
           box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
           transform: translateY(-2px);
         }
@@ -316,6 +299,7 @@ const ConnectWallet = () => {
           cursor: not-allowed;
           transform: none;
         }
+
 
         .wallet-options {
           position: absolute;
@@ -377,8 +361,18 @@ const ConnectWallet = () => {
           text-align: left;
         }
 
-        .wallet-option:hover {
+        .wallet-option.not-installed {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .wallet-option.not-installed:hover {
           background: #f8fafc;
+        }
+
+        .wallet-option:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
 
         .wallet-icon {

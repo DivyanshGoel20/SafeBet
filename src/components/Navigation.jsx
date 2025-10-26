@@ -81,6 +81,13 @@ const Navigation = ({ currentPage, onNavigate }) => {
           align-items: center;
           justify-content: space-between;
           height: 70px;
+          position: relative;
+        }
+
+        .nav-brand {
+          display: flex;
+          align-items: center;
+          gap: 12px;
         }
 
         .nav-brand h1 {
@@ -92,6 +99,18 @@ const Navigation = ({ currentPage, onNavigate }) => {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
+        }
+
+        .network-badge {
+          background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+          color: white;
+          padding: 4px 8px;
+          border-radius: 6px;
+          font-size: 10px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
         }
 
         .nav-links {
@@ -148,6 +167,8 @@ const Navigation = ({ currentPage, onNavigate }) => {
           padding: 8px 16px;
           border-radius: 8px;
           border: 1px solid rgba(34, 197, 94, 0.2);
+          height: fit-content;
+          max-height: 50px;
         }
 
         .wallet-address {

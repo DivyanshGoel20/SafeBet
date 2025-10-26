@@ -43,7 +43,7 @@ function App() {
               <div className="App">
                 <Navigation currentPage={currentPage} onNavigate={navigateToPage} />
                 
-                {currentPage === 'home' && <HomePage />}
+                {currentPage === 'home' && <HomePage onNavigate={navigateToPage} />}
                 {currentPage === 'markets' && <MarketsPage onMarketClick={navigateToMarket} />}
                 {currentPage === 'admin' && <AdminPage />}
                 {currentPage === 'market' && (
