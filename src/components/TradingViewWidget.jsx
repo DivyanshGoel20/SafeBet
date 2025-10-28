@@ -27,7 +27,10 @@ const TradingViewWidget = ({ symbol, height = 400 }) => {
     return () => (onLoadScriptRef.current = null);
 
     function createWidget() {
-      const containerId = `tradingview-${symbol.replace(/[^a-zA-Z0-9]/g, '')}`;
+      // Build a Pyth-sourced symbol (e.g., ETHUSD -> PYTH:ETHUSD)
+      const userSymbol = symbol || "BTCUSD";
+      const tvSymbol = userSymbol.startsWith("PYTH:") ? userSymbol : `PYTH:${userSymbol}`;
+      const containerId = `tradingview-${(userSymbol || 'default').replace(/[^a-zA-Z0-9]/g, '')}`;
       
       // Remove existing widget if it exists
       const existingWidget = document.getElementById(containerId);
@@ -36,9 +39,11 @@ const TradingViewWidget = ({ symbol, height = 400 }) => {
       }
 
       if (document.getElementById(containerId) && "TradingView" in window) {
+        // Debug symbol
+        try { console.log('[TradingView] tvSymbol =', tvSymbol); } catch {}
         new window.TradingView.widget({
           autosize: true,
-          symbol: symbol || "BTCUSD",
+          symbol: tvSymbol,
           interval: "D",
           timezone: "Etc/UTC",
           theme: "dark",

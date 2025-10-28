@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { ethers } from 'ethers';
 import { 
   getAllMarkets, 
@@ -35,6 +35,18 @@ export const MarketProvider = ({ children }) => {
   const [provider, setProvider] = useState(null);
   const [account, setAccount] = useState(null);
   const { openTxToast } = useNotification();
+  const readProviderRef = useRef(null);
+
+  // Stable read-only provider on Arbitrum Sepolia to avoid wallet rate limits
+  useEffect(() => {
+    if (!readProviderRef.current) {
+      try {
+        readProviderRef.current = new ethers.JsonRpcProvider('https://sepolia-rollup.arbitrum.io/rpc');
+      } catch (err) {
+        console.error('Failed to create read provider:', err);
+      }
+    }
+  }, []);
 
   const initializeMarketContext = (providerInstance, accountAddress, factoryAddr) => {
     console.log('Initializing MarketContext:', { providerInstance: !!providerInstance, accountAddress, factoryAddr });
@@ -46,39 +58,71 @@ export const MarketProvider = ({ children }) => {
   };
 
   // Load all markets from factory
+  const isLoadingRef = useRef(false);
   const loadMarkets = async () => {
     if (!provider || !factoryAddress) {
       console.warn('Provider or factory address not set', { provider: !!provider, factoryAddress });
       return;
     }
 
+    if (isLoadingRef.current) {
+      // Prevent overlapping loads which can cause MetaMask rate limiting
+      return;
+    }
+
+    isLoadingRef.current = true;
     setLoading(true);
     setError(null);
 
     try {
-      const marketAddresses = await getAllMarkets(provider, factoryAddress);
-      
-      // Get details for each market
-      const marketDetails = await Promise.all(
-        marketAddresses.map(async (address) => {
-          try {
-            const details = await getMarketDetails(provider, address);
-            return details;
-          } catch (err) {
-            console.error(`Error loading market ${address}:`, err);
-            return null;
-          }
-        })
-      );
+      const readProvider = readProviderRef.current || provider;
+      const marketAddresses = await getAllMarkets(readProvider, factoryAddress);
 
-      // Filter out null results (symbol is now fetched from contract)
-      const validMarkets = marketDetails.filter(market => market !== null);
+      // Concurrency limiter: process details in small chunks to avoid RPC rate limits
+      const chunkSize = 3; // safe parallelism
+      const details = [];
+
+      const retryGetDetails = async (address, attempts = 2) => {
+        for (let i = 0; i <= attempts; i++) {
+          try {
+            return await getMarketDetails(provider, address);
+          } catch (err) {
+            if (i === attempts) throw err;
+            // small backoff before retry
+            await new Promise(r => setTimeout(r, 300 * (i + 1)));
+          }
+        }
+      };
+
+      for (let i = 0; i < marketAddresses.length; i += chunkSize) {
+        const slice = marketAddresses.slice(i, i + chunkSize);
+        const sliceResults = await Promise.all(
+          slice.map(async (address) => {
+            try {
+              // Skip addresses without code (EOA or wrong network)
+              const code = await (readProvider.getCode ? readProvider.getCode(address) : '0x1');
+              if (!code || code === '0x') {
+                console.warn('Skipping non-contract address from factory:', address);
+                return null;
+              }
+              return await retryGetDetails(address);
+            } catch (err) {
+              console.error(`Error loading market ${address}:`, err);
+              return null;
+            }
+          })
+        );
+        details.push(...sliceResults);
+      }
+
+      const validMarkets = details.filter(Boolean);
       setMarkets(validMarkets);
     } catch (err) {
       console.error('Error loading markets:', err);
-      setError(err.message);
+      setError(err.message || 'Failed to load markets');
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
   };
 
@@ -427,6 +471,122 @@ export const MarketProvider = ({ children }) => {
       console.log('Initial load: Skipping loadMarkets - missing provider or factory address', { provider: !!provider, factoryAddress });
     }
   }, [provider, factoryAddress]);
+
+  // Listen to on-chain BetPlaced events to show Blockscout toasts even when
+  // transactions are initiated by external widgets (e.g., Nexus Bridge+Execute)
+  useEffect(() => {
+    if (!provider || markets.length === 0 || !account) {
+      return;
+    }
+
+    // Listen via raw log filters for robustness (works regardless of Contract instance)
+    const listeners = [];
+    const topic0 = ethers.id('BetPlaced(address,uint8,uint256)');
+    const accountTopic = '0x' + '0'.repeat(24 * 2) + account.slice(2).toLowerCase();
+
+    markets.forEach((m) => {
+      try {
+        const filter = {
+          address: m.address,
+          topics: [topic0, accountTopic], // only events from connected wallet
+        };
+        const listener = (log) => {
+          try {
+            const txHash = log?.transactionHash || log?.hash;
+            // Deduplicate and avoid replay when reconnecting listeners
+            if (txHash && !seenTxsRef.current.has(txHash)) {
+              seenTxsRef.current.add(txHash);
+              openTxToast('1500', txHash);
+            }
+          } catch (e) {
+            console.error('Error showing Blockscout toast for BetPlaced:', e);
+          }
+        };
+        provider.on(filter, listener);
+        listeners.push({ filter, listener });
+      } catch (err) {
+        console.error('Failed to attach raw BetPlaced listener for market', m.address, err);
+      }
+    });
+
+    return () => {
+      listeners.forEach(({ filter, listener }) => {
+        try {
+          provider.off(filter, listener);
+        } catch (err) {
+          // ignore
+        }
+      });
+    };
+  }, [provider, markets, account]);
+
+  // Fallback: poll logs to ensure toasts even if provider.on does not fire (e.g., some EIP-1193 providers)
+  const lastCheckedBlockRef = useRef(0);
+  const seenTxsRef = useRef(new Set());
+  const latestConfirmedBlockRef = useRef(0);
+
+  useEffect(() => {
+    if (!provider || markets.length === 0 || !account) {
+      return;
+    }
+
+    let intervalId;
+    const topic0 = ethers.id('BetPlaced(address,uint8,uint256)');
+    const accountTopic = '0x' + '0'.repeat(24 * 2) + account.slice(2).toLowerCase();
+
+    const poll = async () => {
+      try {
+        const currentBlock = await provider.getBlockNumber();
+        // Only consider logs from the latest finalized range to avoid replaying old logs
+        const finalityLag = 6; // skip the most recent N blocks to avoid re-orgs and duplicates
+        const safeToBlock = Math.max(0, currentBlock - finalityLag);
+        let fromBlock = lastCheckedBlockRef.current || safeToBlock;
+        fromBlock = Math.min(fromBlock, safeToBlock);
+        if (fromBlock < 0) fromBlock = 0;
+
+        // On first run, skip historical logs entirely
+        if (lastCheckedBlockRef.current === 0) {
+          lastCheckedBlockRef.current = safeToBlock + 1;
+          latestConfirmedBlockRef.current = safeToBlock;
+          return;
+        }
+
+        for (const m of markets) {
+          try {
+            const logs = await provider.getLogs({
+              address: m.address,
+              topics: [topic0, accountTopic],
+              fromBlock,
+              toBlock: safeToBlock,
+            });
+
+            logs.forEach((log) => {
+              const txHash = log.transactionHash;
+              if (txHash && !seenTxsRef.current.has(txHash)) {
+                seenTxsRef.current.add(txHash);
+                openTxToast('1500', txHash);
+              }
+            });
+          } catch (err) {
+            // ignore per-market errors to keep polling
+          }
+        }
+
+        lastCheckedBlockRef.current = safeToBlock + 1;
+        latestConfirmedBlockRef.current = safeToBlock;
+      } catch (err) {
+        // keep polling even if a cycle fails
+      }
+    };
+
+    // kick off immediately then poll
+    poll();
+    intervalId = setInterval(poll, 6000);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [provider, markets, account]);
 
   const value = {
     markets,

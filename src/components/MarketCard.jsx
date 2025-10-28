@@ -3,6 +3,7 @@ import { useMarket } from '../contexts/MarketContext';
 import { useWallet } from '../contexts/WalletContext';
 import { ethers } from 'ethers';
 import { MARKET_STATES, MARKET_SIDES, extractPriceFromQuestion } from '../utils/contracts';
+import BridgeBetButton from './BridgeBetButton';
 
 const MarketCard = ({ market, onClick }) => {
   const { placeBet, getUserMarketStake, hasUserClaimedFromMarket, getMarketTimeLeft } = useMarket();
@@ -208,26 +209,42 @@ const MarketCard = ({ market, onClick }) => {
           </div>
           
           <div className="bet-buttons">
-            <button
-              className="bet-button yes"
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePlaceBet(MARKET_SIDES.YES);
-              }}
-              disabled={isPlacingBet || !betAmount}
+            <BridgeBetButton
+              marketAddress={market.address}
+              side={MARKET_SIDES.YES}
+              amount={betAmount}
             >
-              {isPlacingBet ? 'Placing...' : 'Bet Yes'}
-            </button>
-            <button
-              className="bet-button no"
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePlaceBet(MARKET_SIDES.NO);
-              }}
-              disabled={isPlacingBet || !betAmount}
+              {({ onClick, isLoading, disabled }) => (
+                <button
+                  className="bet-button yes"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClick();
+                  }}
+                  disabled={disabled || isLoading || !betAmount}
+                >
+                  {isLoading ? 'Bridging & Placing...' : 'Bet Yes'}
+                </button>
+              )}
+            </BridgeBetButton>
+            <BridgeBetButton
+              marketAddress={market.address}
+              side={MARKET_SIDES.NO}
+              amount={betAmount}
             >
-              {isPlacingBet ? 'Placing...' : 'Bet No'}
-            </button>
+              {({ onClick, isLoading, disabled }) => (
+                <button
+                  className="bet-button no"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClick();
+                  }}
+                  disabled={disabled || isLoading || !betAmount}
+                >
+                  {isLoading ? 'Bridging & Placing...' : 'Bet No'}
+                </button>
+              )}
+            </BridgeBetButton>
           </div>
 
           {betError && (

@@ -50,7 +50,8 @@ const AdminPage = () => {
     setCreateSuccess(null);
 
     try {
-      const targetPriceFormatted = ethers.parseUnits(marketData.targetPrice, 8);
+      // Send target price exactly as typed by the user (no scaling)
+      const targetPriceFormatted = marketData.targetPrice;
       const resolveTimestamp = parseInt(marketData.resolveDate);
       const pythPriceIdBytes = ethers.zeroPadValue(marketData.pythPriceId, 32);
 
@@ -241,15 +242,17 @@ const AdminPage = () => {
                 <div className="form-group">
                   <label>Target Price (USD) *</label>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={displayTargetPrice}
                     onChange={(e) => {
-                      const displayValue = e.target.value;
-                      setDisplayTargetPrice(displayValue);
-                      // Convert to contract format (8 decimals)
-                      const contractValue = displayValue ? (parseFloat(displayValue) * 1e8).toString() : '';
-                      setMarketData(prev => ({ ...prev, targetPrice: contractValue }));
+                      // Keep only digits to avoid scientific notation like 1e+22
+                      const raw = e.target.value;
+                      const digitsOnly = raw.replace(/[^0-9]/g, '');
+                      setDisplayTargetPrice(digitsOnly);
+                      // Store exactly as digits-only string; submit sends as-is
+                      setMarketData(prev => ({ ...prev, targetPrice: digitsOnly }));
                     }}
                     placeholder=""
                     required

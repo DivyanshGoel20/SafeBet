@@ -1,8 +1,7 @@
 /* Modern Professional Design for Lossless Prediction Markets */
 
-* {
-  margin: 0;
-  padding: 0;
+/* Limit global resets to box-sizing only to avoid breaking third-party widgets */
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
@@ -321,3 +320,5 @@ body {
     align-self: center;
   }
 }
+
+/* Removed Nexus overrides to restore default widget styles */

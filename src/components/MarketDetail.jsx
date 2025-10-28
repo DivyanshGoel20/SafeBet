@@ -5,6 +5,7 @@ import { ethers } from 'ethers';
 import { MARKET_STATES, MARKET_SIDES, extractPriceFromQuestion } from '../utils/contracts';
 import TransactionHistory from './TransactionHistory';
 import TradingViewWidget from './TradingViewWidget';
+import BridgeBetButton from './BridgeBetButton';
 
 const MarketDetail = ({ marketAddress, onBack }) => {
   const { getMarket, placeBet, resolveMarket, claimWinnings, getUserMarketStake, hasUserClaimedFromMarket, getMarketTimeLeft } = useMarket();
@@ -346,20 +347,36 @@ const MarketDetail = ({ marketAddress, onBack }) => {
                 </div>
                 
                 <div className="bet-buttons">
-                  <button
-                    className="bet-button yes"
-                    onClick={() => handlePlaceBet(MARKET_SIDES.YES)}
-                    disabled={isPlacingBet || !betAmount}
+                  <BridgeBetButton
+                    marketAddress={marketAddress}
+                    side={MARKET_SIDES.YES}
+                    amount={betAmount}
                   >
-                    {isPlacingBet ? 'Placing...' : '✅ Bet Yes'}
-                  </button>
-                  <button
-                    className="bet-button no"
-                    onClick={() => handlePlaceBet(MARKET_SIDES.NO)}
-                    disabled={isPlacingBet || !betAmount}
+                    {({ onClick, isLoading, disabled }) => (
+                      <button
+                        className="bet-button yes"
+                        onClick={onClick}
+                        disabled={disabled || isLoading || !betAmount}
+                      >
+                        {isLoading ? 'Bridging & Placing...' : '✅ Bet Yes'}
+                      </button>
+                    )}
+                  </BridgeBetButton>
+                  <BridgeBetButton
+                    marketAddress={marketAddress}
+                    side={MARKET_SIDES.NO}
+                    amount={betAmount}
                   >
-                    {isPlacingBet ? 'Placing...' : '❌ Bet No'}
-                  </button>
+                    {({ onClick, isLoading, disabled }) => (
+                      <button
+                        className="bet-button no"
+                        onClick={onClick}
+                        disabled={disabled || isLoading || !betAmount}
+                      >
+                        {isLoading ? 'Bridging & Placing...' : '❌ Bet No'}
+                      </button>
+                    )}
+                  </BridgeBetButton>
                 </div>
               </div>
             </div>

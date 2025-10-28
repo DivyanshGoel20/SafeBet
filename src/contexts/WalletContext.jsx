@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ethers } from 'ethers';
+import { useNexus } from '@avail-project/nexus-widgets';
+
 
 const WalletContext = createContext();
 
@@ -186,17 +188,40 @@ export const WalletProvider = ({ children }) => {
     }
   };
 
-  const handleAccountsChanged = (accounts) => {
+  const handleAccountsChanged = async (accounts) => {
     if (accounts.length === 0) {
       disconnectWallet();
-    } else {
-      connectWallet();
+      return;
+    }
+    try {
+      const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+      const nextSigner = await ethersProvider.getSigner();
+      const address = await nextSigner.getAddress();
+      setAccount(address);
+      setProvider(ethersProvider);
+      setSigner(nextSigner);
+      setIsConnected(true);
+      fetchUSDCBalance();
+    } catch (err) {
+      console.error('Error updating account after accountsChanged:', err);
     }
   };
 
-  const handleChainChanged = (chainId) => {
-    // Reload the page when chain changes
-    window.location.reload();
+  const handleChainChanged = async (chainId) => {
+    // Recreate provider/signer without reloading to keep app state intact
+    try {
+      console.log('Chain changed, updating provider');
+      const ethersProvider = new ethers.BrowserProvider(window.ethereum);
+      const nextSigner = await ethersProvider.getSigner();
+      const address = await nextSigner.getAddress();
+      setAccount(address);
+      setProvider(ethersProvider);
+      setSigner(nextSigner);
+      setIsConnected(true);
+      fetchUSDCBalance();
+    } catch (err) {
+      console.error('Error handling chainChanged:', err);
+    }
   };
 
   const value = {

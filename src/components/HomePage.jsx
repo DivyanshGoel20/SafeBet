@@ -1,6 +1,7 @@
 import React from 'react';
 import { useWallet } from '../contexts/WalletContext';
 import ConnectWallet from './ConnectWallet';
+// import UnifiedBalances from './UnifiedBalances';
 
 const HomePage = ({ onNavigate }) => {
   const { isConnected, account } = useWallet();
@@ -60,6 +61,9 @@ const HomePage = ({ onNavigate }) => {
               </div>
             )}
           </div>
+          
+          {/* Unified Balances */}
+          {/* {isConnected && <UnifiedBalances />} */}
         </div>
       </section>
 
