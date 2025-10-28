@@ -1,73 +1,52 @@
-# React + TypeScript + Vite
+# **SafeBet**
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### *The lossless prediction market powered by Aave, Avail, Pyth, and Blockscout.*
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 💡 What is SafeBet?
 
-## React Compiler
+**SafeBet** is a **lossless prediction market** where users can bet on crypto price outcomes **without ever losing their money**.  
+All user funds are deposited into **Aave** to earn yield while the market is live.  
+When the market resolves using **Pyth’s real-time price feeds**, only the **interest** generated is distributed to the winners — while **everyone gets their initial USDC back**.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+It’s **risk-free, transparent, and yield-powered speculation** built on DeFi.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## ⚙️ How It Works
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. **Admin creates a market** (e.g., “Will ETH ≥ $3,000 on Oct 30?”)  
+2. **Users place bets** in USDC (Yes/No)  
+3. The contract deposits all funds into **Aave** to earn interest  
+4. **Pyth** provides verified price data to resolve the market  
+5. Winners share the **interest earned**, and everyone gets their **principal back**
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🌉 Cross-Chain Betting with Avail
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**Avail Nexus SDK** allows users to **place bets using balances from other chains**, bridging liquidity to Arbitrum seamlessly.  
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🔍 Transparency with Blockscout
+
+Integrated with **Blockscout SDK**, every market and payout is **verifiable on-chain**, ensuring total transparency and user trust.
+
+---
+
+## 🧠 Built With
+
+- **Aave Protocol** — Generates interest on pooled USDC  
+- **Pyth Network** — Real-time price feeds for market resolution  
+- **Avail Nexus SDK** — Cross-chain betting and unified balances  
+- **Blockscout SDK** — On-chain transparency and tracking  
+- **Solidity & Arbitrum** — Smart contracts and fast execution  
+
+---
+
+## 🚀 The Vision
+
+SafeBet reimagines prediction markets — **no losses, no fear, only fair play.**  
+A DeFi-native platform where your money works for you, even when you’re just betting on outcomes.
